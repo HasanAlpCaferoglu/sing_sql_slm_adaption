@@ -634,7 +634,7 @@ class EvalRunner:
     def evaluate(self):
         """
         Evaluates the model's performance by preparing prompts efficiently and
-        running generations in parallel.
+        running generations sequentially.
         """
         # Write configs
         write_config_file_path = self.eval_results_dir / "config.json"
@@ -649,7 +649,7 @@ class EvalRunner:
         generation_count = len(temperature_list)
         t2s_dicts_with_translations = []
 
-        # --- OPTIMIZATION: Load prompt template ONCE before the loop ---
+        # Load prompt template ONCE before the loop
         prompt_temp_name = str(eval_configs["prompt_temp_name"])
         prompt_template = load_template(template_name=prompt_temp_name)
         if not bool(eval_configs['use_reasoning']):
@@ -660,32 +660,24 @@ class EvalRunner:
         for t2s_dict_idx, t2s_dict in enumerate(self.eval_dataset):
             print(f"Processing item {t2s_dict_idx + 1}/{len(self.eval_dataset)} | DB: {t2s_dict['db_id']} | Q_ID: {t2s_dict['question_id']}")
             
-            # --- OPTIMIZATION: Step 1. Prepare the prompt string ONCE for the current question ---
+            # Step 1. Prepare the prompt string ONCE for the current question
             prompt = self._prepare_prompt(t2s_dict, prompt_template)
             
             t2s_dict["translations"] = {}
-            max_workers = 1 # Using threads for single GPU model inference can add overhead. 
-                            # Sticking to sequential calls per question is often cleaner and safer.
-                            # If you have multiple GPUs, a different parallelization strategy is needed.
-            
-            # --- OPTIMIZATION: Step 2. Run multiple generations using the SAME prompt ---
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                futures = [
-                    executor.submit(
-                        self._generate_and_evaluate_sql,
-                        prompt, # Pass the pre-built prompt
+
+            # --- REFINEMENT: Replaced ThreadPoolExecutor with a simple, more direct for loop ---
+            # Step 2. Run multiple generations sequentially.
+            for idx in range(generation_count):
+                try:
+                    translation_output = self._generate_and_evaluate_sql(
+                        prompt,    # Pass the pre-built prompt
                         t2s_dict,
                         idx
                     )
-                    for idx in range(generation_count)
-                ]
+                    t2s_dict["translations"][str(translation_output.get("ex_id"))] = translation_output
+                except Exception as e:
+                    self.eval_logger.error(f"An error occurred during SQL generation/evaluation for ex_id {idx}: {e}\n{traceback.format_exc()}")
 
-                for future in as_completed(futures):
-                    try:
-                        translation_output = future.result()
-                        t2s_dict["translations"][str(translation_output.get("ex_id"))] = translation_output
-                    except Exception as e:
-                        self.eval_logger.error(f"A thread failed during SQL generation/evaluation: {e}\n{traceback.format_exc()}")
             
             # Save progress after each item
             t2s_dicts_with_translations.append({
