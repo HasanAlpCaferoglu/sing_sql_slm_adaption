@@ -184,6 +184,8 @@ class EvalRunner:
                 db_ids_str += "_"
 
         eval_configs = self.args.config['evaluation']
+        prompt_temp_name = str(eval_configs['prompt_temp_name'])
+        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
         ebm = "T" if bool(eval_configs["eval_base_model"]) else "F"
         upm = "T" if bool(eval_configs["use_proprietary_model"]) else "F"
         cvd = "T" if bool(eval_configs["use_col_value_and_descriptions"]) else "F"
@@ -195,7 +197,7 @@ class EvalRunner:
         ur = "T" if bool(eval_configs["use_reasoning"]) else "F"
         en = int(eval_configs["eval_no"])
     
-        eval_sub_dir_name = f"ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
+        eval_sub_dir_name = f"ptn{ptn}_ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
 
         # eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{self.args.run_start_time}")
         eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{eval_sub_dir_name}")
