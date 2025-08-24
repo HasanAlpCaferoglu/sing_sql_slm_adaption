@@ -273,7 +273,7 @@ def format_reward(completions, weight: int = 1.0, **kwargs) -> list[float]:
     """
     This function checks if the completion has a specific format
     """
-    pattern = r"<reasoning>.*?</reasoning>\s*<answer>.*?</answer>"
+    pattern = r"<think>.*?</think>\s*<answer>.*?</answer>"
     # responses = [completion[0]['content'] for completion in completions] # conversational format
     responses = [extract_response_part(completion) for completion in completions] # standard format
     

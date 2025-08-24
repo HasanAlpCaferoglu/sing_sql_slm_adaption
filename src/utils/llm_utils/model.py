@@ -21,15 +21,15 @@ def extract_xml_answer(text: str) -> str:
     return answer
 
 def extract_xml_reasoning(text: str) -> str:
-    if ("<reasoning>" in text) and ("</reasoning>" in text):
-        reasoning = text.split("<reasoning>")[-1]
-        reasoning = reasoning.split("</reasoning>")[0]
+    if ("<think>" in text) and ("</think>" in text):
+        reasoning = text.split("<think>")[-1]
+        reasoning = reasoning.split("</think>")[0]
         return reasoning
-    elif ("<reasoning>" not in text) and ("</reasoning>" in text):
-        reasoning = text.split("</reasoning>")[0]
+    elif ("<think>" not in text) and ("</think>" in text):
+        reasoning = text.split("</think>")[0]
         return reasoning
-    elif ("<reasoning>" in text) and ("</reasoning>" not in text):
-        reasoning = reasoning = text.split("<reasoning>")[-1]
+    elif ("<think>" in text) and ("</think>" not in text):
+        reasoning = reasoning = text.split("<think>")[-1]
         return reasoning
     else:
         return ""

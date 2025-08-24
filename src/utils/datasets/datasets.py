@@ -83,7 +83,7 @@ class BirdTrainText2SQLWithSchema(Dataset):
 
         prompt_template = load_template(template_name='train_t2s_schemaless')
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -133,7 +133,7 @@ class BirdTrainText2SQLWithSchema(Dataset):
 
         # prepare output sequences for SFT
         if self.use_reasoning:
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql}\n</answer>"
@@ -181,7 +181,7 @@ class Text2SQLDataset(Dataset):
         prompt_template = load_template(template_name='t2s')
 
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -246,7 +246,7 @@ class Text2SQLDataset(Dataset):
                 example_string = f"Example {e_id+1}:\n"
                 example_string += f"Example User Question: {example_question}\n"
                 if self.use_reasoning_in_few_shots:
-                    example_string += f"<reasoning>{example_dac_reasoning}</reasoning>\n"
+                    example_string += f"<think>{example_dac_reasoning}</think>\n"
                 example_string += f"<answer>{example_sql}</answer>\n"
                 few_shot_string += example_string + "\n"
             
@@ -316,7 +316,7 @@ class Text2SQLDataset(Dataset):
     
         # prepare output sequences for SFT
         if self.use_reasoning:
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql}\n</answer>"
@@ -345,7 +345,7 @@ class Text2SQLSchemalessDataset(Dataset):
 
         prompt_template = load_template(template_name='train_t2s_schemaless')
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -396,7 +396,7 @@ class Text2SQLSchemalessDataset(Dataset):
         
         # prepare output sequences for SFT
         if self.use_reasoning: # sft trainig with reasoning
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql}\n</answer>"
@@ -427,7 +427,7 @@ class Text2SQLWithSchemaDataset(Dataset):
 
         prompt_template = load_template(template_name='train_t2s_with_schema')
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -479,7 +479,7 @@ class Text2SQLWithSchemaDataset(Dataset):
         
         # prepare output sequences for SFT
         if self.use_reasoning:
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql}\n</answer>"
@@ -507,7 +507,7 @@ class SchemaLinkingSchemalessDataset(Dataset):
 
         prompt_template = load_template(template_name='train_sl_schemaless')
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -563,7 +563,7 @@ class SchemaLinkingSchemalessDataset(Dataset):
         
         # prepare output sequences for SFT
         if self.use_reasoning:
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql_columns_dict_json_str}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql_columns_dict_json_str}\n</answer>"
@@ -594,7 +594,7 @@ class SchemaLinkingWithSchemaDataset(Dataset):
 
         prompt_template = load_template(template_name='train_sl_with_schema')
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             self.prompt_template = pt
         else:
             self.prompt_template = prompt_template
@@ -651,7 +651,7 @@ class SchemaLinkingWithSchemaDataset(Dataset):
         
         # prepare output sequences for SFT
         if self.use_reasoning:
-            output_seq = f"\n<reasoning>\n{dac_reasoning}\n</reasoning>"
+            output_seq = f"\n<think>\n{dac_reasoning}\n</think>"
             output_seq = output_seq + f"\n<answer>\n{sql_columns_dict_json_str}\n</answer>"
         else:
             output_seq = f"\n<answer>\n{sql_columns_dict_json_str}\n</answer>"

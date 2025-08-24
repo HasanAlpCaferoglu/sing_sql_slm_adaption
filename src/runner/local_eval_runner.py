@@ -385,7 +385,7 @@ class LocalEvalRunner:
             raise ValueError(f"NOT IMPLEMENTED YET.")
 
         if not use_reasoning:
-            prompt_template = prompt_template.split("### Respond in the following format:")[0] # removing <reasoning></reasoning> part
+            prompt_template = prompt_template.split("### Respond in the following format:")[0] # removing <think></think> part
             prompt_template += "\nWhen you get to the final query, output the query string ONLY inside the xml delimiter <answer></answer>."
 
         ## Prompt Template formatting

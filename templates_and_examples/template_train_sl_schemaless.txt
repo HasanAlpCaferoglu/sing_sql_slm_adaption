@@ -17,9 +17,9 @@
 {QUESTION}
 
 ### Respond in the following format:
-<reasoning>
+<think>
 Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.
-</reasoning>
+</think>
 <answer>
 ```json{{
     "Selected tables and columns represented as JSON object whose keys are the table names and values are list of column names (List[str]) that are selected for the SQL generation."

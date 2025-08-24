@@ -448,7 +448,7 @@ class EvalRunner:
                 example_string = f"Example {example_idx+1}:\n"
                 example_string += f"Question: {synthetic_question}\n"
                 if use_reasoning_in_few_shots:
-                    example_string += f"<reasoning>{example_dac_reasoning}</reasoning>\n"
+                    example_string += f"<think>{example_dac_reasoning}</think>\n"
                 example_string += f"<answer>{synthetic_sql}</answer>\n"
                 few_shot_string += example_string + "\n"
                 ## IDEA: Can giving search keyword for each example increase the EX, as it might add where to focus on the examples? Or we may direct LLM to focus on that part.
@@ -522,16 +522,15 @@ class EvalRunner:
     
 
         # load prompt template
-        prompt_template = load_template(template_name='t2s')
+        prompt_template = load_template(template_name='template_slm_t2s')
 
         if not use_reasoning:
-            pt = prompt_template.split('<reasoning>')[0] + prompt_template.split('</reasoning>')[1] 
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             prompt_template = pt
 
         # Format the template
         augmentation_string = few_shot_augmentation_string + schema_augmentation_string
         prompt = prompt_template.format(
-            DB_ID = db_id,
             AUGMENTATION = augmentation_string,
             QUESTION = question,
         )

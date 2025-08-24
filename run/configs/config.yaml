@@ -41,7 +41,7 @@ train:
   use_reasoning: True # training for both reasoning and sql generation
   output_format: "xml" # ['xml', 'text'] # This doesn't matter if use_reasoning false
   shuffle_dataset_tasks_items: True
-  base_model_name: "unsloth/Qwen2.5-Coder-3B-Instruct" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
+  base_model_name: "cycloneboy/SLM-SQL-1.5B" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
   load_in_4bit: False # 4bit quantization to reduce memory usage. Can be False.
   use_lora: True
   train_workers_num: 1
@@ -53,12 +53,12 @@ train:
     lora_target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
   
   training_params:
-    num_train_epochs: 4 # old_values [1, 3]
-    per_device_train_batch_size: 4 # For SFT [2, 4]. For GRPO [1]
-    gradient_accumulation_steps: 8 # Effective batch size = batch_size * gradient_accumulation
+    num_train_epochs: 1 # old_values [1, 3]
+    per_device_train_batch_size: 2 # For SFT [2, 4]. For GRPO [1]
+    gradient_accumulation_steps: 4 # Effective batch size = batch_size * gradient_accumulation
     per_device_eval_batch_size: 1  # Adjust based on GPU memory # old_values[1, 2, 4]
     eval_accumulation_steps: 8 # If left unset, the whole predictions are accumulated on the device accelerator before being moved to the CPU (faster but requires more memory).
-    learning_rate: 2e-5 # For SFT use 2e-4, 1e-4, 2e-5, 5e-5 | for GRPO use 5e-6
+    learning_rate: 2e-4 # For SFT use 2e-4, 1e-4, 2e-5, 5e-5 | for GRPO use 5e-6
     lr_scheduler_type: "cosine" # "linear", "cosine", etc. For both SFT and GRPO use cosine
     warmup_ratio: 0.03          # For SFT use 0.03, for GRPO use 0.1 
     weight_decay: 0.01          # For SFT use 0.01, for GRPO use 0.1
@@ -87,7 +87,7 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  eval_base_model: False
+  eval_base_model: True
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
   use_col_value_and_descriptions: True
@@ -107,34 +107,4 @@ evaluation:
   eval_no: 1
   
 ### MODELS ###
-# Qwen/Qwen2.5-Coder-<ParamNo>B-Instruct-<GGUF / AWQ / GPTQ-Int4 / GPTQ-Int8 / >
-# Qwen/Qwen2.5-Coder-1.5B-Instruct # 32k Context Lenght
-# Qwen/Qwen2.5-Coder-3B-Instruct # 32k Context Length
-# Qwen/Qwen2.5-Coder-7B-Instruct # 128k Context Length
-
-
-### UNSLOTH MODELS ###
-## Qwen 2.5 Coder Family
-
-# unsloth/Qwen2.5-Coder-0.5B-Instruct-bnb-4bit
-# unsloth/Qwen2.5-Coder-1.5B-Instruct-bnb-4bit
-# unsloth/Qwen2.5-Coder-3B-Instruct-bnb-4bit
-# unsloth/Qwen2.5-Coder-7B-Instruct-bnb-4bit
-# unsloth/Qwen2.5-Coder-14B-Instruct-bnb-4bit
-# ----
-# unsloth/Llama-3.2-3B-Instruct
-# unsloth/Qwen2.5-Coder-3B-Instruct
-
-### CODES MODELS
-# seeklhy/codes-1b
-# seeklhy/codes-3b
-# seeklhy/codes-7b
-# seeklhy/codes-15b
-
-### Microsoft Models
-# microsoft/Phi-4-mini-reasoning | unsloth/Phi-4-mini-reasoning ==> 3.8B parameter
- 
-
-
-
-### SLM-SQL = learning rate of 2.0e-5 with linear scheduling, a warm-up rate of 0.1, an effective batch size of 1024, and training over 2 epochs. For reinforcement learning (RL), we adopted the GRPO algorithm with a learning rate of 3e-6, a cosine learning rate scheduler, a warm-up rate of 0.1, and 1 training epoch. GRPO rollouts were set to 6, with clip ratios of 0.2 and 0.28
+# cycloneboy/SLM-SQL-1.5B
