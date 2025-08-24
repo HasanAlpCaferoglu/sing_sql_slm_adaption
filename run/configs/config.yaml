@@ -97,7 +97,7 @@ evaluation:
   schema_content: 'filtered_schema' # this can be one of ['filtered_schema', 'ground_truth_schema', 'whole_schema']
   use_few_shot: True
   few_shot_cnt: 6
-  use_reasoning_in_few_shots: True
+  use_reasoning_in_few_shots: False
   use_reasoning: True  
   output_format: "xml" # ['xml', 'text', 'json']
   max_new_tokens: 4096
