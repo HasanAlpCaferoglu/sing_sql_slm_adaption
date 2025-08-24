@@ -83,6 +83,8 @@ def train_with_unsloth_sft(args):
 
     ## Train configurations
     train_configs = args.config['train']
+    prompt_temp_name = train_configs.get("prompt_temp_name", "")
+    ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
     use_few_shot = bool(train_configs["use_few_shot"])
     few_shot_cnt = int(train_configs["few_shot_cnt"]) if use_few_shot else 0
     use_reasoning_in_few_shots = bool(train_configs.get("use_reasoning_in_few_shots", False)) if use_few_shot else False
@@ -90,6 +92,7 @@ def train_with_unsloth_sft(args):
     use_cvd = train_configs["use_col_value_and_descriptions"]
     use_cvd_init = 't' if use_cvd else "f"
     use_reasoning = train_configs["use_reasoning"]
+    use_grpo = train_configs["use_grpo"]
     base_model_name = train_configs['base_model_name']
     use_lora = bool(train_configs.get("use_lora", False))
     lora_params = train_configs.get('lora_params', {})
@@ -129,9 +132,12 @@ def train_with_unsloth_sft(args):
     bs = int(training_params['per_device_train_batch_size'])
     gas=int(training_params["gradient_accumulation_steps"])
     learningrate=float(training_params["learning_rate"])
-    hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}"
+    hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_pt{ptn}"
     if use_reasoning:
         hf_repo_name = f"{hf_repo_name}_sftreason" # Reasoning with SFT
+    elif use_grpo:
+        hf_repo_name = f"{hf_repo_name}_grpo" # Reasoning with SFT
+
 
     hf_repo_name = f"{os.getenv('HF_USER')}/{hf_repo_name}"
     local_output_dir = f"./{hf_repo_name}"  # this is where checkpoints will be saved

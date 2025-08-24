@@ -392,6 +392,7 @@ class EvalRunner:
         use_reasoning = bool(eval_configs['use_reasoning'])
         output_format = eval_configs['output_format']
         use_cvd = bool(eval_configs['use_col_value_and_descriptions'])
+        prompt_temp_name = str(eval_configs["prompt_temp_name"])
         use_schema = bool(eval_configs['use_schema'])
         schema_content = str(eval_configs['schema_content'])
         use_few_shot = bool(eval_configs['use_few_shot'])
@@ -522,18 +523,27 @@ class EvalRunner:
     
 
         # load prompt template
-        prompt_template = load_template(template_name='slm_t2s')
+        prompt_template = load_template(template_name=prompt_temp_name)
 
         if not use_reasoning:
             pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
             prompt_template = pt
 
         # Format the template
-        augmentation_string = few_shot_augmentation_string + schema_augmentation_string
-        prompt = prompt_template.format(
-            AUGMENTATION = augmentation_string,
-            QUESTION = question,
-        )
+        if prompt_temp_name == "slm_t2s":
+            augmentation_string = few_shot_augmentation_string + schema_augmentation_string
+            prompt = prompt_template.format(
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
+        elif prompt_temp_name == "t2s":
+            augmentation_string = few_shot_augmentation_string + schema_augmentation_string
+            prompt = prompt_template.format(
+                DB_ID = db_id,
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
+
 
         # self.eval_logger.info(f"----------PROMPT: \n{prompt}") # DELETE OR COMMENT OUT LATER
 

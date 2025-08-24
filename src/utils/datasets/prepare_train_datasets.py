@@ -20,6 +20,7 @@ def prepare_train_datasets(args, tokenizer=None, max_tokens=32768):
     dataset_root_path = Path(args.dataset_root_path)
     dbs_root_dir = Path(args.dbs_root_dir)
     train_configs = args.config['train']
+    prompt_temp_name = str(train_configs['prompt_temp_name'])
     granularity_level = args.config['granularity_level']
     schema_content = str(train_configs['schema_content'])
     use_cvd = train_configs['use_col_value_and_descriptions']
@@ -128,6 +129,7 @@ def prepare_train_datasets(args, tokenizer=None, max_tokens=32768):
                 use_grpo=use_grpo,
                 use_unsloth=use_unsloth, 
                 use_schema=False, # use_schema is True because of the t2sws (text-to-sql with schema) task
+                prompt_temp_name = prompt_temp_name,
                 schema_content=schema_content,
                 use_cvd = use_cvd,
                 use_few_shot= use_few_shot,
@@ -162,6 +164,7 @@ def prepare_train_datasets(args, tokenizer=None, max_tokens=32768):
                 use_grpo=use_grpo,
                 use_unsloth=use_unsloth, 
                 use_schema=True, # use_schema is True because of the t2sws (text-to-sql with schema) task
+                prompt_temp_name = prompt_temp_name,
                 schema_content=schema_content,
                 use_cvd = use_cvd,
                 use_few_shot= use_few_shot,
@@ -230,6 +233,7 @@ def get_dataset_instances(args, tokenizer=None, max_tokens=32768) -> List[Datase
     granularity_level = args.config['granularity_level']
     dataset_tasks = train_configs['dataset_tasks']
     
+    prompt_temp_name = str(train_configs['prompt_temp_name'])
     schema_content = str(train_configs['schema_content'])
     use_few_shot = bool(train_configs['use_few_shot'])
     few_shot_cnt = int(train_configs['few_shot_cnt']) if use_few_shot else 0
@@ -317,6 +321,7 @@ def get_dataset_instances(args, tokenizer=None, max_tokens=32768) -> List[Datase
                 use_grpo=use_grpo,
                 use_unsloth=use_unsloth, 
                 use_schema=False, # use_schema is True because of the t2s (text-to-sql without schema) task
+                prompt_temp_name = prompt_temp_name,
                 schema_content=schema_content,
                 use_cvd = use_cvd,
                 use_few_shot= use_few_shot,
@@ -346,6 +351,7 @@ def get_dataset_instances(args, tokenizer=None, max_tokens=32768) -> List[Datase
                 use_grpo=use_grpo,
                 use_unsloth=use_unsloth, 
                 use_schema=True, # use_schema is True because of the t2sws (text-to-sql with schema) task
+                prompt_temp_name = prompt_temp_name,
                 schema_content=schema_content,
                 use_cvd = use_cvd,
                 use_few_shot= use_few_shot,

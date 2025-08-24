@@ -153,6 +153,7 @@ class Text2SQLDataset(Dataset):
                  use_grpo: bool, 
                  use_unsloth: bool, 
                  use_schema: bool,
+                 prompt_temp_name: str,
                  schema_content: Literal['filtered_schema', 'ground_truth_schema', 'whole_schema'], 
                  use_cvd: bool,
                  use_few_shot: bool,
@@ -167,6 +168,7 @@ class Text2SQLDataset(Dataset):
         self.use_grpo = use_grpo
         self.use_unsloth = use_unsloth
         self.use_schema = use_schema
+        self.prompt_temp_name = prompt_temp_name if prompt_temp_name else "t2s"
         self.schema_content = schema_content
         self.use_cvd = use_cvd
         self.use_few_shot = use_few_shot
@@ -178,7 +180,8 @@ class Text2SQLDataset(Dataset):
 
         self.dataset = self.load_dataset()
 
-        prompt_template = load_template(template_name='t2s')
+
+        prompt_template = load_template(template_name=self.prompt_temp_name)
 
         if not use_reasoning:
             pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
@@ -308,11 +311,17 @@ class Text2SQLDataset(Dataset):
 
         # Format the template
         augmentation_string = few_shot_augmentation_string + schema_augmentation_string
-        input_seq = self.prompt_template.format(
-            DB_ID = db_id,
-            AUGMENTATION = augmentation_string,
-            QUESTION = question,
-        )
+        if self.prompt_temp_name == "t2s":
+            input_seq = self.prompt_template.format(
+                DB_ID = db_id,
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
+        elif self.prompt_temp_name == "slm_t2s":
+            input_seq = self.prompt_template.format(
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
     
         # prepare output sequences for SFT
         if self.use_reasoning:

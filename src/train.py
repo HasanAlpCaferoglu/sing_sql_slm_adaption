@@ -79,6 +79,8 @@ def create_wandb_run_id(args):
 
     ## Train configurations
     train_configs = args.config['train']
+    prompt_temp_name = train_configs.get("prompt_temp_name", "")
+    ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
     use_few_shot = bool(train_configs.get("use_few_shot", False))
     few_shot_cnt = int(train_configs.get("few_shot_cnt", 0)) if use_few_shot else 0
     use_reasoning_in_few_shots = bool(train_configs.get("use_reasoning_in_few_shots", False)) if use_few_shot else False
@@ -118,11 +120,11 @@ def create_wandb_run_id(args):
 
     # hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}"
     if use_grpo:
-        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_grpo" # Training with GRPO
+        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_pt{ptn}_grpo" # Training with GRPO
     elif use_reasoning:
-        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_sftreason" # Reasoning with SFT
+        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_pt{ptn}_sftreason" # Reasoning with SFT
     else:
-        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}"
+        hf_repo_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs}_cvd{use_cvd_init}_pt{ptn}"
 
     wandb_run_id = hf_repo_name
 
