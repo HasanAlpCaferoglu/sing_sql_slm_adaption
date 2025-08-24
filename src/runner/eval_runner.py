@@ -492,7 +492,7 @@ class EvalRunner:
                         max_new_tokens=max_new_tokens,
                         temperature=temperature,
                         top_p=top_p,
-                        do_sample=False, 
+                        # do_sample=False, 
                         pad_token_id=self.tokenizer.eos_token_id
                     )
                 output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
