@@ -212,6 +212,8 @@ class EvalRunner:
         print('Loading Model...') 
         ## Train configurations
         train_configs = self.args.config['train']
+        prompt_temp_name = train_configs.get("prompt_temp_name", "")
+        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
         use_few_shot = bool(train_configs["use_few_shot"])
         few_shot_cnt = int(train_configs["few_shot_cnt"]) if use_few_shot else 0
         use_reasoning_in_few_shots = bool(train_configs.get("use_reasoning_in_few_shots", False)) if use_few_shot else False
@@ -263,7 +265,7 @@ class EvalRunner:
             gas=int(training_params["gradient_accumulation_steps"])
             learningrate=float(training_params["learning_rate"])
             
-            model_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs_in_training}_cvd{use_cvd_init}"
+            model_name = f"{base_model_id_without_user}_{t2s_dataset_name[0]}{data_mode[0]}_{db_id_str}_{task_str}_r{r}_a{alpha}_e{epoch}_bs{bs}_gas{gas}_lr{learningrate}_fs{few_shot_cnt}{urifs_in_training}_cvd{use_cvd_init}_pt{ptn}"
             if use_reasoning:
                 model_name = f"{model_name}_sftreason" # Reasoning with SFT
             elif use_grpo:
