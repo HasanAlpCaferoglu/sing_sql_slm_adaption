@@ -88,7 +88,7 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  prompt_temp_name: 'slm_t2s'
+  prompt_temp_name: 't2s'
   eval_base_model: False
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
