@@ -28,7 +28,7 @@ preprocess:
     db_completion_configs: "./run/configs/db_completion_configs.yaml"
 
 train:
-  prompt_temp_name: 't2s' # ['slm_t2s', 't2s']
+  prompt_temp_name: 'slm_t2s' # ['slm_t2s', 't2s']
   dataset_tasks: ['t2s'] # ['t2s', 'sl', 'dc', 'slws', 't2sws']
   schema_content: 'filtered_schema' # this can be one of ['filtered_schema', 'ground_truth_schema', 'whole_schema']
   use_col_value_and_descriptions: True
@@ -88,7 +88,7 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  prompt_temp_name: 't2s'  # ['slm_t2s', 't2s']
+  prompt_temp_name: 'slm_t2s'  # ['slm_t2s', 't2s']
   eval_base_model: False
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
@@ -106,7 +106,7 @@ evaluation:
   temperature: [0.0, 0.5, 0.5, 0.8, 0.8, 1.0, 1.0, 1.8, 1.8] # old [0.0, 0.2, 0.5, 0.8, 1.0] 
   top_p: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # old [1.0, 0.8, 1.0, 1.0, 1.0, 1.0]
   keyword_extraction_llm_model: "gemini-2.5-flash" # Either empty or proprietary models. If you set empty, it will use the model above
-  eval_no: 1
+  eval_no: 2
   
 ### MODELS ###
 # cycloneboy/SLM-SQL-1.5B
