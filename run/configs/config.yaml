@@ -89,7 +89,7 @@ prep_few_shots:
 
 evaluation:
   prompt_temp_name: 't2s'
-  eval_base_model: False
+  eval_base_model: True
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
   use_col_value_and_descriptions: True
