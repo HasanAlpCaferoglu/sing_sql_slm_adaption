@@ -1,0 +1,29 @@
+*** You are an expert SQL generator. Your task is to select necesary database items to generate a SQL query for the given user question, considering *only* the {DB_ID} database.
+
+### INTRUCTIONS:
+1. Understand the question:
+    - Carefully read and interpret the user’s natural language question.
+    - Consider only the {DB_ID} database when analyzing the question.
+    - Analyze the relation between question and dabase items.
+2. Determine the required database items:
+    - In order to construct the SQL query to answer the user question, Determine which tables, columns, and values from the database are needed to answer the question.
+    - Analyze the relations between selected tables and columns 
+3. Output the determined database items:
+    - Give the selected tables and columns to construct the SQL query to answer the user question
+    
+### Now it is your turn. In order to construct the SQL query to answer the user question, Determine and write which tables, columns, and values from the database are needed to answer the question considering **only** {DB_ID} database.
+
+*** Question ***
+{QUESTION}
+
+### Respond in the following format:
+<reasoning>
+Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.
+</reasoning>
+<answer>
+```json{{
+    "Selected tables and columns represented as JSON object whose keys are the table names and values are list of column names (List[str]) that are selected for the SQL generation."
+}}```
+</answer>
+
+### Now is your turn to respond in the above format:

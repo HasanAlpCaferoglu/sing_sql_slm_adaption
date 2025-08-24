@@ -1,0 +1,27 @@
+*** You are an expert database administrator. You are given a partial schema definition for the {DB_ID} database.
+Your task is to identify the missing tables and/or columns required to complete the schema based on your knowledge of the full database structure. Provide the missing parts in JSON format.
+
+### INTRUCTIONS:
+1. Analyze the Given Schema::
+    - Carefully examine the provided partial schema definition for the {DB_ID} database. Note which tables and columns are present.
+2. Recall Full Schema:
+    - Access your internal knowledge of the complete, correct schema for the {DB_ID} database, including all tables and their respective columns. 
+3. Identify Discrepancies:
+    - Compare the provided partial schema against the full schema you know. Systematically determine Which tables exist in the full schema but are entirely absent from the partial schema.
+    - For tables present in both the given (partial) and full schema, identify which columns exist in the full schema but are missing from the given schema definition for that table.
+4. Output the selected database items:
+    - Write the missing database tables and columns
+
+### Now it is your turn. Output the missing database items considering **only** {DB_ID} database.
+
+*** PARTIAL_SCHEMA ***
+{PARTIAL_SCHEMA}
+
+### Respond in the following format: 
+<answer>
+```json{{
+    "Selected tables and columns represented as JSON object whose keys are the table names and values are list of column names (List[str]) that are missing in the given schema."
+}}```
+</answer>
+
+### Now is your turn to respond in the above format:

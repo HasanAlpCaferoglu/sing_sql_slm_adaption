@@ -1,0 +1,378 @@
+### Examples
+
+*** Exampe 1 ***
+Database Schema: 
+CREATE TABLE productlines (
+    productLine  PRIMARY KEY,
+    image,
+    textDescription,
+    htmlDescription
+);
+
+CREATE TABLE products (
+    productCode PRIMARY KEY,
+    productLine,
+    buyPrice,
+    MSRP,
+    productName,
+    FOREIGN KEY (productLine) REFERENCES productlines(productLine)
+);
+
+CREATE TABLE orderdetails (
+    orderNumber,
+    productCode,
+    quantityOrdered,
+    orderLineNumber,
+    priceEach DECIMAL,
+    PRIMARY KEY (orderNumber, productCode),
+    FOREIGN KEY (productCode) REFERENCES products(productCode)
+);
+
+{
+  "text_to_sql_pair_1": {
+    "question": "List all product lines and their HTML descriptions.",
+    "chain_of_thought_reasoning": "Analysis: This question requests data only from the `productlines` table — specifically the product line identifier and its HTML description.\nSteps:\n1. Use a simple SELECT query on the `productlines` table.\n2. Select the `productLine` and `htmlDescription` columns.\nReasoning: Since the information is available in a single table, no joins or filters are needed.",
+    "SQL": "SELECT productLine, htmlDescription FROM productlines;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_2": {
+    "question": "Find the order number and quantity for each product whose MSRP is greater than 100.",
+    "chain_of_thought_reasoning": "Analysis: The question requires order information from `orderdetails`, but only for products that have an MSRP greater than 100. Therefore, both `products` and `orderdetails` tables are needed.\nSteps:\n1. Join `orderdetails` (T1) with `products` (T2) on `T1.productCode = T2.productCode`.\n2. Filter with `T2.MSRP > 100`.\n3. Select `T1.orderNumber` and `T1.quantityOrdered`.\nReasoning: The join allows access to `MSRP` values associated with orders. Filtering on `MSRP` after the join ensures that only orders for expensive products are considered.",
+    "SQL": "SELECT T1.orderNumber, T1.quantityOrdered FROM orderdetails AS T1 INNER JOIN products AS T2 ON T1.productCode = T2.productCode WHERE T2.MSRP > 100;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_3": {
+    "question": "For every ordered item from product lines with 'Cars' in their description, show the product name, the product line's HTML description, the order number, and the price it was sold at.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for specific details (product name, product line HTML description, order number, price each) for items belonging to product lines described as containing 'Cars'. This requires joining all three tables (`orderdetails`, `products`, `productlines`) and filtering based on the `textDescription` in the `productlines` table.\nSteps:\n1.  Join `orderdetails` (aliased T3) with `products` (aliased T2) on `T3.productCode = T2.productCode`.\n2.  Join the result with `productlines` (aliased T1) on `T2.productLine = T1.productLine`.\n3.  Filter the joined results using a WHERE clause to include only rows where `T1.textDescription` contains the substring 'Cars' (using `LIKE '%Cars%'`).\n4.  Select the required columns: `T2.productName`, `T1.htmlDescription`, `T3.orderNumber`, and `T3.priceEach`.\nReasoning: We need `orderdetails` for `orderNumber` and `priceEach`. We need `products` for `productName` and to link to `productlines` via `productLine`. We need `productlines` for `htmlDescription` and to filter by `textDescription`. Joining all three tables allows access to all required information and filter conditions.",
+    "SQL": "SELECT T2.productName, T1.htmlDescription, T3.orderNumber, T3.priceEach FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T1.textDescription LIKE '%Cars%';",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_4": {
+    "question": "Provide a list of product lines (showing their text description), the corresponding product name, and the total quantity ordered for each product, but only include order lines where the quantity ordered was greater than 40.",
+    "chain_of_thought_reasoning": "Analysis: The goal is to list product lines, product names, and their aggregated ordered quantities, subject to a filter on the quantity in individual order lines. This necessitates joining all three tables, filtering based on `quantityOrdered`, and then grouping to aggregate the quantity.\nSteps:\n1.  Join `productlines` (T1) with `products` (T2) on `T1.productLine = T2.productLine`.\n2.  Join the result with `orderdetails` (T3) on `T2.productCode = T3.productCode`.\n3.  Filter the results from the join to include only rows where `T3.quantityOrdered > 40`.\n4.  Group the filtered results by product line description (`T1.textDescription`) and product name (`T2.productName`).\n5.  For each group, calculate the sum of `T3.quantityOrdered`.\n6.  Select `T1.textDescription`, `T2.productName`, and the calculated `SUM(T3.quantityOrdered)`.\nReasoning: The join brings together product line descriptions, product names, and order details. Filtering on `quantityOrdered` happens before aggregation. Grouping by both product line description and product name ensures we get the total quantity for each specific product within its line, considering only the high-quantity order lines. We need all three tables: `productlines` for the description, `products` for the name and linking, and `orderdetails` for the quantity and filtering.",
+    "SQL": "SELECT T1.textDescription, T2.productName, SUM(T3.quantityOrdered) AS TotalQuantity FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T3.quantityOrdered > 40 GROUP BY T1.textDescription, T2.productName;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_5":{
+    "question": "List the product name, order number, and quantity ordered for products whose total ordered quantity across all orders exceeds 100.",
+    "chain_of_thought_reasoning": "Analysis: The question wants product-level information, but only for products where the **total quantity ordered** (across all orders) exceeds 100 units. This requires:
+    \n1. First, calculating the total quantity ordered per product using `orderdetails`.
+    \n2. Then, filtering products where this total exceeds 100.
+    \n3. Finally, retrieving product names and order information for these products.
+    \nSteps:
+    \n1. Create a subquery that:
+        \n- Selects `productCode` and `SUM(quantityOrdered)` as `total_quantity`
+        \n- Groups by `productCode`
+        \n- Filters (`HAVING`) for `total_quantity > 100`
+    \n2. Alias this subquery (e.g., `HighDemandProducts`).
+    \n3. Perform an INNER JOIN between `products` (T1) and `HighDemandProducts` (T2) on `productCode`.
+    \n4. Then join the result with `orderdetails` (T3) to retrieve specific order numbers and quantities.
+    \n5. Select the product name (`T1.productName`), the order number (`T3.orderNumber`), and the quantity ordered (`T3.quantityOrdered`).
+    \nReasoning:
+    \n- The subquery isolates only high-demand products.
+    \n- The main query retrieves product names and specific order instances where those high-demand products were ordered.
+    \n- All three tables are used, matching the schema.
+    \n- This structure shows a meaningful use of JOIN with a subquery — first pre-filtering products based on global aggregate information, then joining to order details.",
+    "SQL": "SELECT T1.productName, T3.orderNumber, T3.quantityOrdered FROM products AS T1 INNER JOIN (SELECT productCode FROM orderdetails GROUP BY productCode HAVING SUM(quantityOrdered) > 100) AS HighDemandProducts ON T1.productCode = HighDemandProducts.productCode INNER JOIN orderdetails AS T3 ON T1.productCode = T3.productCode;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_6": {
+    "question": "For each product line (identified by its text description), find the product (show name and code) that has the highest ratio of MSRP to buy price. Also display the image associated with that product line.",
+    "chain_of_thought_reasoning": "Analysis: This question asks to find the product with the maximum MSRP/buyPrice ratio within each product line. It requires data from all three tables to ensure context, even though the core calculation only uses `products`. The `image` from `productlines` is also requested.\nSteps:\n1.  Join `productlines` (T1) with `products` (T2) on `T1.productLine = T2.productLine`. Since we need to involve `orderdetails` (T3) to satisfy the 'use all tables' rule, join T2 with T3 on `T2.productCode = T3.productCode`. Use `DISTINCT` in a subquery or the main query if needed to avoid product duplication caused by multiple orders.\n2.  Calculate the ratio `T2.MSRP / T2.buyPrice` for each product. Handle potential division by zero if `buyPrice` can be zero (e.g., using `CASE` or filtering `buyPrice > 0`). Assuming `buyPrice` is positive.\n3.  Use a window function `RANK()` or `ROW_NUMBER()`. Partition by `T1.productLine` (or `T1.textDescription`) and order by the calculated ratio in descending order.\n4.  Wrap this in a common table expression (CTE) or subquery.\n5.  Filter the results from the CTE/subquery to keep only rows where the rank is 1 (highest ratio per product line).\n6.  Select `T1.textDescription`, `T2.productName`, `T2.productCode`, `T1.image`, and the calculated ratio.\nReasoning: Joining all tables provides the necessary context. The core logic involves calculating a ratio from the `products` table. The window function is essential for finding the maximum ratio *within each group* (product line) without needing complex self-joins or subqueries for aggregation comparison. Selecting `image` from `productlines` and involving `orderdetails` in the join satisfies schema coverage requirements.",
+    "SQL": "WITH ProductRatio AS (SELECT T1.textDescription, T2.productName, T2.productCode, T1.image, (CAST(T2.MSRP AS REAL) / T2.buyPrice) AS PriceRatio, ROW_NUMBER() OVER (PARTITION BY T1.productLine ORDER BY (CAST(T2.MSRP AS REAL) / T2.buyPrice) DESC) as rn FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T2.buyPrice > 0 GROUP BY T1.textDescription, T2.productName, T2.productCode, T1.image, T2.MSRP, T2.buyPrice) SELECT textDescription, productName, productCode, image, PriceRatio FROM ProductRatio WHERE rn = 1;",
+    "difficulty": "Challenging"
+  },
+   "text_to_sql_pair_7": {
+    "question": "Display the product name, its line's text description, the order number, the order line number, and calculate the difference between the price each item was sold at (`priceEach`) and the average `priceEach` for all items within the same product line across all orders.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for details from all three tables and a comparison of each item's `priceEach` to the average `priceEach` of its entire product line. This requires a window function to calculate the average across a partition.\nSteps:\n1.  Join `productlines` (T1) with `products` (T2) on `T1.productLine = T2.productLine`.\n2.  Join the result with `orderdetails` (T3) on `T2.productCode = T3.productCode`.\n3.  Use the window function `AVG(T3.priceEach) OVER (PARTITION BY T1.productLine)` to calculate the average `priceEach` for each product line across all orders associated with that line.\n4.  Calculate the difference: `T3.priceEach - (AVG(T3.priceEach) OVER (PARTITION BY T1.productLine))`.\n5.  Select `T2.productName`, `T1.textDescription`, `T3.orderNumber`, `T3.orderLineNumber`, `T3.priceEach`, and the calculated difference.\nReasoning: Joining all tables provides access to product name (`products`), line description (`productlines`), order/line numbers, and individual price (`orderdetails`). The `AVG()` window function partitioned by `productLine` is crucial for calculating the average price specific to each line without needing a separate subquery and join for aggregation. This allows comparing each item's price to its line's average directly.",
+    "SQL": "SELECT T2.productName, T1.textDescription, T3.orderNumber, T3.orderLineNumber, T3.priceEach, (T3.priceEach - AVG(T3.priceEach) OVER (PARTITION BY T1.productLine)) AS PriceDifferenceFromLineAvg FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode;",
+    "difficulty": "Window"
+  },
+   "text_to_sql_pair_8": {
+    "question": "Show the product name, MSRP, buy price, order number, and the rank of each product within its product line based on its MSRP. Include the product line's HTML description.",
+    "chain_of_thought_reasoning": "Analysis: The question requires ranking products within their lines based on MSRP while showing details from all three tables. A window function `RANK()` is needed.\nSteps:\n1.  Join `productlines` (T1) with `products` (T2) on `T1.productLine = T2.productLine`.\n2.  Join the result with `orderdetails` (T3) on `T2.productCode = T3.productCode`.\n3.  Use the window function `RANK() OVER (PARTITION BY T1.productLine ORDER BY T2.MSRP DESC)` to assign a rank to each product based on its MSRP within its product line. Products with the same MSRP will get the same rank.\n4.  Select `T2.productName`, `T2.MSRP`, `T2.buyPrice`, `T3.orderNumber`, the calculated rank, and `T1.htmlDescription`.\nReasoning: The three-table join makes all required columns (`productName`, `MSRP`, `buyPrice`, `orderNumber`, `htmlDescription`) available. The `RANK()` window function partitioned by `productLine` and ordered by `MSRP` descending correctly assigns the desired rank. Including `orderdetails` ensures all tables are used, even if `orderNumber` is the only column directly selected from it in the final output for this specific query.",
+    "SQL": "SELECT T2.productName, T2.MSRP, T2.buyPrice, T3.orderNumber, RANK() OVER (PARTITION BY T1.productLine ORDER BY T2.MSRP DESC) AS MSRP_Rank_In_Line, T1.htmlDescription FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode;",
+    "difficulty": "Window"
+  }
+}
+
+*** Exampe 2 ***
+Database Schema: 
+CREATE TABLE orders (
+    orderNumber PRIMARY KEY,
+    requiredDate,
+    customerNumber,
+    orderDate
+);
+
+CREATE TABLE products (
+    productCode PRIMARY KEY,
+    productLine,
+    productScale,
+    productDescription
+);
+
+CREATE TABLE orderdetails (
+    orderNumber,
+    productCode,
+    orderLineNumber,
+    priceEach,
+    quantityOrdered,
+    PRIMARY KEY (orderNumber, productCode),
+    FOREIGN KEY (orderNumber) REFERENCES orders(orderNumber),
+    FOREIGN KEY (productCode) REFERENCES products(productCode)
+);
+
+{
+  "text_to_sql_pair_1": {
+    "question": "List all order numbers and their required dates.",
+    "chain_of_thought_reasoning": "Analysis: This question only requires information from the `orders` table — specifically the order number and the required date for each order.\nSteps:\n1. Use a SELECT query on the `orders` table.\n2. Select the `orderNumber` and `requiredDate` columns.\nReasoning: No joins or filters are needed since the required fields are available directly in one table.",
+    "SQL": "SELECT orderNumber, requiredDate FROM orders;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_2": {
+    "question": "For transactions recorded on '2003-11-06', what is the client ID, the item description, and the number of units ordered?",
+    "chain_of_thought_reasoning": "Analysis: The question asks for customer identifier (`customerNumber`), product description (`productDescription`), and order quantity (`quantityOrdered`) specifically for orders placed on a single date ('2003-11-06'). This requires joining order information (`orders`), product information (`products`), and order item details (`orderdetails`), then filtering by the transaction date.\nSteps:\n1.  Identify source tables: `orders` (T1) for `customerNumber` and `orderDate`; `products` (T2) for `productDescription`; `orderdetails` (T3) for `quantityOrdered` and linking.\n2.  Join `orders` (T1) with `orderdetails` (T3) on `T1.orderNumber = T3.orderNumber`.\n3.  Join the result with `products` (T2) on `T3.productCode = T2.productCode`.\n4.  Filter the joined results using `WHERE T1.orderDate = '2003-11-06'`.\n5.  Select the requested columns: `T1.customerNumber`, `T2.productDescription`, `T3.quantityOrdered`.\nReasoning: Joining `orders` and `orderdetails` links orders to their specific items. Joining with `products` adds the description for each item. Filtering by `orderDate` restricts the results to the specified day. This uses all three tables from Schema 2 and retrieves the requested information.",
+    "SQL": "SELECT T1.customerNumber, T2.productDescription, T3.quantityOrdered FROM orders AS T1 INNER JOIN orderdetails AS T3 ON T1.orderNumber = T3.orderNumber INNER JOIN products AS T2 ON T3.productCode = T2.productCode WHERE T1.orderDate = '2003-11-06';",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_3": {
+    "question": "Find the total quantity ordered for each product scale.",
+    "chain_of_thought_reasoning": "Analysis: To compute total quantity per product scale, we need to combine data from `orderdetails` (which holds quantity) and `products` (which holds product scale). This requires a join between the two tables.\nSteps:\n1. Join `orderdetails` (T1) with `products` (T2) on `T1.productCode = T2.productCode`.\n2. Group by `T2.productScale`.\n3. Calculate the total quantity using `SUM(T1.quantityOrdered)`.\n4. Select `T2.productScale` and the calculated total quantity.\nReasoning: This join enables us to map each order's quantity to the appropriate product scale, then summarize across groups. It's more complex than a single-table aggregation.",
+    "SQL": "SELECT T2.productScale, SUM(T1.quantityOrdered) AS totalQuantity FROM orderdetails AS T1 INNER JOIN products AS T2 ON T1.productCode = T2.productCode GROUP BY T2.productScale;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_4": {
+    "question": "What is the total monetary value (`priceEach` * `quantityOrdered`) of all items ordered by client ID 141, broken down by item size (`productScale`)? Also show the date the items were needed (`requiredDate`).",
+    "chain_of_thought_reasoning": "Analysis: The question asks for an aggregated total value per product scale for a specific customer ('client ID 141'), also showing the required date. This involves joining all tables, filtering by customer, calculating a line item's total value, and aggregating this value grouped by scale and required date.\nSteps:\n1.  Join `orders` (T1), `orderdetails` (T3), and `products` (T2). T1 connects to T3 via `orderNumber`, T3 connects to T2 via `productCode`.\n2.  Filter the results for the specific customer using `WHERE T1.customerNumber = 141`.\n3.  Calculate the value for each order line: `T3.priceEach * T3.quantityOrdered`.\n4.  Group the filtered results by item size (`T2.productScale`) and the date needed (`T1.requiredDate`). Grouping by `requiredDate` is necessary to include it in the SELECT list alongside the aggregate function, as per standard SQL.\n5.  Calculate the sum of the line values for each group using `SUM(T3.priceEach * T3.quantityOrdered)`.\n6.  Select the item size (`T2.productScale`), the date needed (`T1.requiredDate`), and the calculated total monetary value.\nReasoning: All three tables are joined to link customer orders (`customerNumber`), required dates (`requiredDate`), order items (`quantityOrdered`, `priceEach`), and product details (`productScale`). Filtering narrows down to the specific customer. Grouping by scale and required date allows aggregation per scale while showing the associated date. The calculation provides the total value per scale/required date combination for the customer.",
+    "SQL": "SELECT T2.productScale, T1.requiredDate, SUM(T3.priceEach * T3.quantityOrdered) AS TotalValuePerScale FROM orders AS T1 INNER JOIN orderdetails AS T3 ON T1.orderNumber = T3.orderNumber INNER JOIN products AS T2 ON T3.productCode = T2.productCode WHERE T1.customerNumber = 141 GROUP BY T2.productScale, T1.requiredDate;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_5": {
+    "question": "For each item category (`productLine`), identify the specific order transaction (show order number and line number) that included the largest quantity of a single item within that category. Include the date the order was needed by.",
+    "chain_of_thought_reasoning": "Analysis: The question asks to find the maximum quantity ordered (`quantityOrdered`) for an item within each item category (`productLine`) across all orders. It requires identifying the specific order (`orderNumber`) and line number (`orderLineNumber`) associated with that maximum quantity, as well as the required date (`requiredDate`).\nSteps:\n1.  Join `orders` (T1), `orderdetails` (T3), and `products` (T2).\n2.  Use a window function `ROW_NUMBER()` to rank order lines within each product line based on quantity ordered. The partition should be by `T2.productLine`, and the ordering should be by `T3.quantityOrdered` in descending order to rank the largest quantity first.\n3.  Wrap this join and window function logic in a Common Table Expression (CTE) for clarity, e.g., `QuantityRank`.\n4.  Filter the results from the CTE where the rank (`rn`) is 1. This selects only the row with the highest quantity for each product line.\n5.  Select the order number (`T1.orderNumber` from the CTE), order line number (`T3.orderLineNumber` from the CTE), the date needed (`T1.requiredDate` from the CTE), the item category (`T2.productLine` from the CTE), and the quantity (`T3.quantityOrdered` from the CTE).\nReasoning: The three-table join provides access to all required fields: order details (`orderNumber`, `requiredDate`), product details (`productLine`), and order item details (`orderLineNumber`, `quantityOrdered`). The `ROW_NUMBER()` window function partitioned by `productLine` efficiently identifies the maximum quantity line within each category. The CTE structure makes the filtering logic clear. Selecting the specified columns provides the answer, using all tables.",
+    "SQL": "WITH QuantityRank AS (SELECT T1.orderNumber, T3.orderLineNumber, T1.requiredDate, T2.productLine, T3.quantityOrdered, ROW_NUMBER() OVER (PARTITION BY T2.productLine ORDER BY T3.quantityOrdered DESC) as rn FROM orders AS T1 INNER JOIN orderdetails AS T3 ON T1.orderNumber = T3.orderNumber INNER JOIN products AS T2 ON T3.productCode = T2.productCode) SELECT orderNumber, orderLineNumber, requiredDate, productLine, quantityOrdered FROM QuantityRank WHERE rn = 1;",
+    "difficulty": "Challenging"
+  },
+  "text_to_sql_pair_6": {
+    "question": "Provide a detailed list including client ID, transaction date, item category (`productLine`), item size (`productScale`), the value of the specific item on the order line (`priceEach * quantityOrdered`), and the running total value of all items ordered by that client up to that transaction date (and specific line number).",
+    "chain_of_thought_reasoning": "Analysis: The question asks for a running total (cumulative sum) of the monetary value of items ordered per customer over time, while also displaying details from all three tables for each order line.\nSteps:\n1.  Join `orders` (T1), `orderdetails` (T3), and `products` (T2).\n2.  Calculate the value of the current order line: `T3.priceEach * T3.quantityOrdered`. Alias this as `LineValue`.\n3.  Use the window function `SUM(T3.priceEach * T3.quantityOrdered) OVER (PARTITION BY T1.customerNumber ORDER BY T1.orderDate, T3.orderLineNumber)`.\n    * `PARTITION BY T1.customerNumber`: Calculates the sum independently for each client.\n    * `ORDER BY T1.orderDate, T3.orderLineNumber`: Defines the order of accumulation – chronologically by date, and then by line number within orders on the same date for consistency.\n    * Alias this as `RunningTotalValue`.\n4.  Select the client ID (`T1.customerNumber`), transaction date (`T1.orderDate`), item category (`T2.productLine`), item size (`T2.productScale`), the calculated `LineValue`, and the calculated `RunningTotalValue`.\nReasoning: The join makes all necessary columns available. Calculating `LineValue` provides the value for the current row. The `SUM() OVER (...)` window function calculates the running total value efficiently per customer. The `PARTITION BY` clause ensures the total resets for each customer, and the `ORDER BY` clause specifies the sequence for accumulation, crucial for a meaningful running total. This uses all tables and provides the requested cumulative value alongside other details like `productLine` and `productScale`.",
+    "SQL": "SELECT T1.customerNumber, T1.orderDate, T2.productLine, T2.productScale, (T3.priceEach * T3.quantityOrdered) AS LineValue, SUM(T3.priceEach * T3.quantityOrdered) OVER (PARTITION BY T1.customerNumber ORDER BY T1.orderDate, T3.orderLineNumber) AS RunningTotalValue FROM orders AS T1 INNER JOIN orderdetails AS T3 ON T1.orderNumber = T3.orderNumber INNER JOIN products AS T2 ON T3.productCode = T2.productCode;",
+    "difficulty": "Window"
+  }
+}
+
+*** Exampe 3 ***
+Database Schema: 
+CREATE TABLE zip_data (
+    zip_code PRIMARY KEY,
+    households,
+    hispanic_population
+);
+
+CREATE TABLE country (
+    zip_code,
+    county,
+    state,
+    FOREIGN KEY (zip_code) REFERENCES zip_data(zip_code)
+);
+
+CREATE TABLE zip_congress (
+    zip_code,
+    district,
+    FOREIGN KEY (zip_code) REFERENCES zip_data(zip_code)
+);
+
+{
+  "text_to_sql_pair_1": {
+    "question": "What are the distinct states listed in the dataset?",
+    "chain_of_thought_reasoning": "Analysis: The question requires retrieving unique state names from the `country` table.\nSteps:\n1. Query the `country` table.\n2. Use `DISTINCT` on the `state` column to avoid duplicates.\nReasoning: This query uses one table with a deduplication operation, making it simple.",
+    "SQL": "SELECT DISTINCT state FROM country;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_2": {
+    "question": "For congressional district 10, list the names of the counties and states associated with its zip codes, along with the Hispanic population count for each zip code.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for county name, state name, and Hispanic population figures for all zip codes belonging to a specific congressional district (10). This requires joining all three tables to link districts, states/counties, and population data, then filtering by the district number.\nSteps:\n1.  Identify the source tables: `zip_data` (T1) for `hispanic_population` and `zip_code`; `country` (T2) for `county` and `state`; `zip_congress` (T3) for `district`.\n2.  Join `zip_data` (T1) with `country` (T2) on `T1.zip_code = T2.zip_code`.\n3.  Join the result with `zip_congress` (T3) on `T1.zip_code = T3.zip_code`.\n4.  Filter the joined results using `WHERE T3.district = 10`.\n5.  Select the requested columns: `T2.county`, `T2.state`, `T1.hispanic_population`.\nReasoning: The joins combine the demographic (`hispanic_population`), administrative (`county`, `state`), and political (`district`) information using the shared `zip_code`. The `WHERE` clause filters the data to the specified district (10). This query utilizes all three tables as required.",
+    "SQL": "SELECT T2.county, T2.state, T1.hispanic_population FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code INNER JOIN zip_congress AS T3 ON T1.zip_code = T3.zip_code WHERE T3.district = 10;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_3": {
+    "question": "Show the number of zip codes in each state.",
+    "chain_of_thought_reasoning": "Analysis: We need to count zip codes grouped by state, using the `country` table which contains both `zip_code` and `state`.\nSteps:\n1. Query the `country` table.\n2. Group by `state`.\n3. Use `COUNT(zip_code)` to count how many zip codes each state has.\n4. Select `state` and the count.\nReasoning: This is a moderate query involving grouping and aggregation, but only uses a single table.",
+    "SQL": "SELECT state, COUNT(zip_code) AS zip_count FROM country GROUP BY state;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_4": {
+    "question": "Find the total number of households per state.",
+    "chain_of_thought_reasoning": "Analysis: To compute household totals per state, we need to combine data from `zip_data` (for `households`) and `country` (for `state`).\nSteps:\n1. Join `zip_data` (T1) with `country` (T2) on `zip_code`.\n2. Group by `T2.state`.\n3. Use `SUM(T1.households)`.\n4. Select the state and total households.\nReasoning: This involves a join and aggregation but uses only two tables, making it moderately complex.",
+    "SQL": "SELECT T2.state, SUM(T1.households) AS total_households FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code GROUP BY T2.state;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_5": {
+    "question": "Calculate the average Hispanic population per household for each county within the state of 'Texas'. Show the county, district and the calculated average.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for a specific calculation (average Hispanic population per household) aggregated at the county level, but only for counties within 'Texas'. This requires joining all tables, filtering by state, grouping by county and district, and performing the calculation on summed values.\nSteps:\n1.  Join `zip_data` (T1), `country` (T2), and `zip_congress` (T3) on `zip_code`.\n2.  Filter the results using `WHERE T2.state = 'Texas'`.\n3.  Group the filtered results by county (`T2.county`) and district (`T3.district`). Grouping by district is included to allow its selection.\n4.  Calculate the sum of Hispanic population (`SUM(T1.hispanic_population)`) and the sum of households (`SUM(T1.households)`) for each group.\n5.  Calculate the average ratio: `CAST(SUM(T1.hispanic_population) AS REAL) / SUM(T1.households)`. Ensure floating-point division and handle potential division by zero if `SUM(households)` can be 0 (e.g., add `WHERE SUM(T1.households) > 0` in HAVING or filter zip codes with 0 households earlier).\n6.  Select `T2.county`, `T3.district`, and the calculated average ratio.\nReasoning: The joins link all necessary data. Filtering isolates the target state. Grouping allows aggregation at the county/district level. The calculation derives the desired average ratio from the summed totals for each county/district combination within the state. All tables are used.",
+    "SQL": "SELECT T2.county, T3.district, CAST(SUM(T1.hispanic_population) AS REAL) / SUM(T1.households) AS avg_hispanic_per_household FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code INNER JOIN zip_congress AS T3 ON T1.zip_code = T3.zip_code WHERE T2.state = 'Texas' AND T1.households > 0 GROUP BY T2.county, T3.district HAVING SUM(T1.households) > 0;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_6": {
+    "question": "What is the aggregate number of residences (households) located in congressional areas numbered below 5, broken down by state and county?",
+    "chain_of_thought_reasoning": "Analysis: The question asks for the total number of households (`SUM(households)`) aggregated by state and county, but only for zip codes belonging to specific congressional districts (those numbered less than 5, i.e., 1, 2, 3, 4). This uses indirect language 'residences' for households and 'congressional areas numbered below 5' for districts < 5.\nSteps:\n1.  Join `zip_data` (T1), `country` (T2), and `zip_congress` (T3) on `zip_code`.\n2.  Filter the joined results using `WHERE T3.district < 5`.\n3.  Group the filtered results by state (`T2.state`) and county (`T2.county`).\n4.  Calculate the sum of households for each group using `SUM(T1.households)`.\n5.  Select the state (`T2.state`), county (`T2.county`), and the calculated sum of households.\nReasoning: The joins connect household data, state/county data, and district data. The `WHERE` clause filters for the specified low-numbered districts. Grouping by state and county allows the `SUM` function to aggregate the household counts for these specific districts within each county. All three tables are used.",
+    "SQL": "SELECT T2.state, T2.county, SUM(T1.households) AS TotalHouseholdsInLowDistricts FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code INNER JOIN zip_congress AS T3 ON T1.zip_code = T3.zip_code WHERE T3.district < 5 GROUP BY T2.state, T2.county;",
+    "difficulty": "Moderate"
+  }
+  ,
+  "text_to_sql_pair_7": {
+    "question": "Find the zip code with the highest Hispanic population in each congressional district.",
+    "chain_of_thought_reasoning": "Analysis: We need to find the zip code with the maximum `hispanic_population` in each district, using data from `zip_data` and `zip_congress` tables. Instead of a `WITH` clause, we use a correlated subquery to identify max values.\nSteps:\n1. Join `zip_data` (T1) with `zip_congress` (T2) on `zip_code`.\n2. Use a correlated subquery to filter rows where the `hispanic_population` is the maximum within each district.\n3. The subquery selects the maximum `hispanic_population` for the outer row’s district.\n4. Select `T2.district`, `T1.zip_code`, and `T1.hispanic_population`.\nReasoning: This query avoids using CTEs or window functions by using a correlated subquery to achieve the same row-level filtering per group.",
+    "SQL": "SELECT T2.district, T1.zip_code, T1.hispanic_population FROM zip_data AS T1 INNER JOIN zip_congress AS T2 ON T1.zip_code = T2.zip_code WHERE T1.hispanic_population = (SELECT MAX(T3.hispanic_population) FROM zip_data AS T3 INNER JOIN zip_congress AS T4 ON T3.zip_code = T4.zip_code WHERE T4.district = T2.district);",
+    "difficulty": "Challenging"
+  }
+  "text_to_sql_pair_8": {
+    "question": "Identify counties where the Hispanic population exceeds the household count in every zip code.",
+    "chain_of_thought_reasoning": "Analysis: We need to compare `hispanic_population > households` for all zip codes within a county and return those counties where this is always true. Since we can't use `WITH`, we simulate logic with a double aggregation.\nSteps:\n1. Join `zip_data` (T1) with `country` (T2) on `zip_code`.\n2. Group by `T2.county`.\n3. Use `MIN(CASE WHEN T1.hispanic_population > T1.households THEN 1 ELSE 0 END)` to check if all rows satisfy the condition.\n4. Use `HAVING` to keep only counties where that minimum is 1.\nReasoning: This logic encodes a universal condition without using subqueries or CTEs, making it challenging even though it uses only two tables.",
+    "SQL": "SELECT T2.county FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code GROUP BY T2.county HAVING MIN(CASE WHEN T1.hispanic_population > T1.households THEN 1 ELSE 0 END) = 1;",
+    "difficulty": "Challenging"
+  }
+  "text_to_sql_pair_9": {
+    "question": "For each county, determine what percentage of its state's total Hispanic population it represents. Show the county, state, associated congressional district, and the calculated percentage.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for a percentage contribution calculation: (county Hispanic pop / state Hispanic pop) * 100. This requires calculating totals at both the county and state levels. Window functions are suitable here.\nSteps:\n1.  Join `zip_data` (T1), `country` (T2), and `zip_congress` (T3) on `zip_code`.\n2.  Create a CTE (`CountyTotals`) to calculate the total Hispanic population per county/state/district combination. Group by `T2.state`, `T2.county`, `T3.district` and calculate `SUM(T1.hispanic_population)` AS `CountyHispanicPop`.\n3.  In the main query select from `CountyTotals`.\n4.  Use a window function `SUM(CountyHispanicPop) OVER (PARTITION BY state)` to calculate the total Hispanic population for the entire state associated with each county row. Alias this as `StateHispanicPop`.\n5.  Calculate the percentage: `(CountyHispanicPop * 100.0 / StateHispanicPop)`.\n6.  Select `county`, `state`, `district`, `CountyHispanicPop`, and the calculated percentage.\n7.  Handle potential division by zero if `StateHispanicPop` can be zero.\nReasoning: The join links all data. The CTE aggregates population to the county level (keeping district for display). The window function `SUM(...) OVER (PARTITION BY state)` efficiently calculates the state total corresponding to each county row without a separate join. The final calculation computes the percentage contribution. All tables are involved.",
+    "SQL": "WITH CountyTotals AS (SELECT T2.state, T2.county, T3.district, SUM(T1.hispanic_population) AS CountyHispanicPop FROM zip_data AS T1 INNER JOIN country AS T2 ON T1.zip_code = T2.zip_code INNER JOIN zip_congress AS T3 ON T1.zip_code = T3.zip_code GROUP BY T2.state, T2.county, T3.district) SELECT county, state, district, CountyHispanicPop, CASE WHEN SUM(CountyHispanicPop) OVER (PARTITION BY state) = 0 THEN 0 ELSE (CountyHispanicPop * 100.0 / SUM(CountyHispanicPop) OVER (PARTITION BY state)) END AS PercentageOfStateHispanicPop FROM CountyTotals;",
+    "difficulty": "Window"
+  }
+}
+
+*** Example 4 ***
+Database Schema: 
+CREATE TABLE part (
+    p_partkey PRIMARY KEY,
+    p_brand,
+    p_container,
+    p_size
+);
+
+CREATE TABLE supplier (
+    s_suppkey PRIMARY KEY,
+    s_nationkey,
+    s_name,
+    s_phone
+);
+
+CREATE TABLE partsupp (
+    ps_partkey,
+    ps_suppkey,
+    ps_comment,
+    ps_availqty,
+    ps_supplycost,
+    PRIMARY KEY (ps_partkey, ps_suppkey), -- Assuming composite primary key
+    FOREIGN KEY (ps_partkey) REFERENCES part(p_partkey),
+    FOREIGN KEY (ps_suppkey) REFERENCES supplier(s_suppkey)
+);
+
+{
+  "text_to_sql_pair_1": {
+    "question": "List all unique part container types used in the database.",
+    "chain_of_thought_reasoning": "Analysis: The question only requires the `part` table. We want to extract the unique container types used for parts.\nSteps:\n1. Query the `part` table.\n2. Use `DISTINCT` on `p_container`.\nReasoning: A single-table query with a simple deduplication operation makes this a basic SQL query.",
+    "SQL": "SELECT DISTINCT p_container FROM part;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_2": {
+    "question": "Show the supplier names, the brand of parts they offer, and the current stock level (available quantity) for all parts with a size dimension of exactly 50.",
+    "chain_of_thought_reasoning": "Analysis: The question asks for supplier names (`s_name`), part brands (`p_brand`), and available stock (`ps_availqty`) specifically for parts meeting a size criterion (`p_size = 50`). This requires linking suppliers to the parts they supply and filtering based on the part's size.\nSteps:\n1.  Identify source tables: `supplier` (T3) for `s_name`; `part` (T1) for `p_brand` and `p_size`; `partsupp` (T2) for `ps_availqty` and linking.\n2.  Join `part` (T1) with `partsupp` (T2) on `T1.p_partkey = T2.ps_partkey`.\n3.  Join the result with `supplier` (T3) on `T2.ps_suppkey = T3.s_suppkey`.\n4.  Filter the joined results using `WHERE T1.p_size = 50`.\n5.  Select the requested columns: `T3.s_name`, `T1.p_brand`, `T2.ps_availqty`.\nReasoning: The joins connect part details (brand, size) with supplier details (name) through the `partsupp` bridge table which also contains the available quantity. The `WHERE` clause filters for the specific size. All three tables are used.",
+    "SQL": "SELECT T3.s_name, T1.p_brand, T2.ps_availqty FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_size = 50;",
+    "difficulty": "Simple"
+  },
+  "text_to_sql_pair_3": {
+    "question": "Get the average available quantity (`ps_availqty`) for each part.",
+    "chain_of_thought_reasoning": "Analysis: The question requires aggregating data from the `partsupp` table. We compute average available quantity per part.\nSteps:\n1. Query the `partsupp` table.\n2. Group by `ps_partkey`.\n3. Use `AVG(ps_availqty)`.\n4. Select `ps_partkey` and the calculated average.\nReasoning: Uses aggregation and grouping on a single table. Moderately complex.",
+    "SQL": "SELECT ps_partkey, AVG(ps_availqty) AS avg_qty FROM partsupp GROUP BY ps_partkey;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_4": {
+    "question": "What is the average cost charged by suppliers (`ps_supplycost`) for parts packaged in 'SM BOX' containers, grouped by the supplier's nation key?",
+    "chain_of_thought_reasoning": "Analysis: The question asks for the average supply cost, aggregated by the supplier's nation, but only considering parts that come in a specific container type ('SM BOX'). This requires joining all tables, filtering by container type, and grouping by nation key for aggregation.\nSteps:\n1.  Join `part` (T1) with `partsupp` (T2) on `T1.p_partkey = T2.ps_partkey`.\n2.  Join the result with `supplier` (T3) on `T2.ps_suppkey = T3.s_suppkey`.\n3.  Filter the joined results using `WHERE T1.p_container = 'SM BOX'`.\n4.  Group the filtered results by the supplier's nation key (`T3.s_nationkey`).\n5.  Calculate the average supply cost for each group using `AVG(T2.ps_supplycost)`.\n6.  Select the nation key (`T3.s_nationkey`) and the calculated average supply cost.\nReasoning: The joins link part details (container) with supply cost (`partsupp`) and supplier details (nation key). The `WHERE` clause filters for the specific container. Grouping by `s_nationkey` allows calculating the average cost for parts in that container type, originating from suppliers in each nation. All three tables are involved.",
+    "SQL": "SELECT T3.s_nationkey, AVG(T2.ps_supplycost) AS avg_cost_sm_box FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_container = 'SM BOX' GROUP BY T3.s_nationkey;",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_5": {
+    "question": "List the contact phone numbers (`s_phone`) for suppliers providing parts of 'Brand#45', along with any comments associated with those specific part supply records (`ps_comment`).",
+    "chain_of_thought_reasoning": "Analysis: The question asks for supplier phone numbers and specific supply comments related to a particular part brand ('Brand#45'). This requires joining all three tables and filtering based on the brand name.\nSteps:\n1.  Join `part` (T1) with `partsupp` (T2) on `T1.p_partkey = T2.ps_partkey`.\n2.  Join the result with `supplier` (T3) on `T2.ps_suppkey = T3.s_suppkey`.\n3.  Filter the joined results using `WHERE T1.p_brand = 'Brand#45'`.\n4.  Select the supplier phone number (`T3.s_phone`) and the part supply comment (`T2.ps_comment`).\nReasoning: The joins link the part brand information (`part`) to the specific supply record comments (`partsupp`) and the supplier's contact details (`supplier`). Filtering by `p_brand` isolates the relevant records. Selecting phone and comment retrieves the requested information, ensuring the `ps_comment` column is used. All tables are part of the join structure.",
+    "SQL": "SELECT T3.s_phone, T2.ps_comment FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_brand = 'Brand#45';",
+    "difficulty": "Moderate"
+  },
+  "text_to_sql_pair_6": {
+    "question": "Identify suppliers whose average supply cost across all the different parts they supply is below the global average supply cost calculated across all part supply records. Show the supplier's name and their nation key.",
+    "chain_of_thought_reasoning": "Analysis: This question requires comparing a supplier's average cost (calculated across their supplied parts) to an overall average cost (calculated across all supplied parts). This typically involves subqueries or CTEs to calculate these averages.\nSteps:\n1.  Calculate the global average supply cost across all records in `partsupp`. Store this in a variable or use a subquery: `(SELECT AVG(ps_supplycost) FROM partsupp)`.\n2.  Join `supplier` (T3) with `partsupp` (T2) on `T3.s_suppkey = T2.ps_suppkey`. Join with `part` (T1) on `T2.ps_partkey = T1.p_partkey` to ensure all tables are used.\n3.  Group the results by supplier (`T3.s_suppkey`, `T3.s_name`, `T3.s_nationkey`).\n4.  Calculate the average supply cost for each supplier using `AVG(T2.ps_supplycost)`.\n5.  Use a `HAVING` clause to compare the supplier's average cost with the global average cost calculated in step 1. Keep suppliers where `AVG(T2.ps_supplycost) < (SELECT AVG(ps_supplycost) FROM partsupp)`.\n6.  Select the supplier's name (`T3.s_name`) and nation key (`T3.s_nationkey`).\nReasoning: The join connects suppliers to their supply costs. Grouping by supplier allows calculating each supplier's average cost. A subquery calculates the global average cost. The `HAVING` clause performs the comparison to filter the suppliers. Including `part` in the join fulfills the all-tables requirement, even if its columns aren't directly in the final SELECT or aggregation for this specific query logic.",
+    "SQL": "SELECT T3.s_name, T3.s_nationkey FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey GROUP BY T3.s_suppkey, T3.s_name, T3.s_nationkey HAVING AVG(T2.ps_supplycost) < (SELECT AVG(ps_supplycost) FROM partsupp);",
+    "difficulty": "Challenging"
+  },
+  "text_to_sql_pair_7": {
+    "question": "Identify suppliers whose names contain the word 'Inc' and who supply more than 3 different parts.",
+    "chain_of_thought_reasoning": "Analysis: This query needs the `supplier` and `partsupp` tables. We must count how many unique parts each supplier provides and filter suppliers whose name contains 'Inc'.\nSteps:\n1. Join `supplier` (T1) and `partsupp` (T2) on `T1.s_suppkey = T2.ps_suppkey`.\n2. Filter using `T1.s_name LIKE '%Inc%'`.\n3. Group by `T1.s_suppkey`, `T1.s_name`.\n4. Count distinct `ps_partkey` per supplier.\n5. Use `HAVING COUNT(DISTINCT T2.ps_partkey) > 3`.\n6. Select supplier name and count.\nReasoning: Multi-table query with filtering, grouping, and aggregation. Relatively complex.",
+    "SQL": "SELECT T1.s_name, COUNT(DISTINCT T2.ps_partkey) AS num_parts FROM supplier AS T1 INNER JOIN partsupp AS T2 ON T1.s_suppkey = T2.ps_suppkey WHERE T1.s_name LIKE '%Inc%' GROUP BY T1.s_suppkey, T1.s_name HAVING COUNT(DISTINCT T2.ps_partkey) > 3;",
+    "difficulty": "Challenging"
+  },
+  "text_to_sql_pair_8": {
+    "question": "For each brand, return the maximum part size and the number of different containers used for that brand.",
+    "chain_of_thought_reasoning": "Analysis: This query analyzes container diversity and maximum size for each brand using only the `part` table.\nSteps:\n1. Query the `part` table.\n2. Group by `p_brand`.\n3. Use `MAX(p_size)` and `COUNT(DISTINCT p_container)`.\n4. Select `p_brand`, `MAX(p_size)`, and count of containers.\nReasoning: Uses two aggregate functions and grouping. No joins, but a more involved aggregation.",
+    "SQL": "SELECT p_brand, MAX(p_size) AS max_size, COUNT(DISTINCT p_container) AS container_count FROM part GROUP BY p_brand;",
+    "difficulty": "Challenging"
+  }
+  "text_to_sql_pair_9": {
+    "question": "For each part, list its brand, size, and the supplier name along with the total quantity they supply and their rank among suppliers for that part based on available quantity.",
+    "chain_of_thought_reasoning": "Analysis: This query ranks suppliers **within each part** based on how much of that part they have available. It requires joining all three tables and applying a `RANK()` window function partitioned by part.\nSteps:\n1. Join `part` (T1) with `partsupp` (T2) on `T1.p_partkey = T2.ps_partkey`.\n2. Join the result with `supplier` (T3) on `T2.ps_suppkey = T3.s_suppkey`.\n3. Use `RANK() OVER (PARTITION BY T1.p_partkey ORDER BY T2.ps_availqty DESC)` to rank suppliers for each part by availability.\n4. Select `T1.p_brand`, `T1.p_size`, `T3.s_name`, `T2.ps_availqty`, and the calculated rank.\nReasoning: The window function provides a per-part ranking of suppliers by available quantity. This lets us evaluate supplier competitiveness for each item. No CTEs are used, and the query includes all three tables.",
+    "SQL": "SELECT T1.p_brand, T1.p_size, T3.s_name, T2.ps_availqty, RANK() OVER (PARTITION BY T1.p_partkey ORDER BY T2.ps_availqty DESC) AS rank_in_part FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey;",
+    "difficulty": "Window"
+  }
+  "text_to_sql_pair_10": {
+    "question": "For each supplier, show their name, the total number of parts they supply, and their rank among all suppliers based on that count.",
+    "chain_of_thought_reasoning": "Analysis: We need to count how many parts each supplier supplies and rank suppliers by that count. This requires joining `supplier` and `partsupp`, aggregating using `COUNT`, and ranking using the `RANK()` window function.\nSteps:\n1. Join `supplier` (T1) with `partsupp` (T2) on `T1.s_suppkey = T2.ps_suppkey`.\n2. Group by `T1.s_suppkey` and `T1.s_name` to count the number of supplied parts.\n3. Use the window function `RANK() OVER (ORDER BY COUNT(*) DESC)` to rank suppliers based on the count of parts they supply.\n4. Select the supplier name, the part count, and the rank.\nReasoning: The join connects suppliers with part supply records. Grouping and counting allows us to get the total parts per supplier. The window function ranks suppliers globally based on that count. The query satisfies the constraint of not using `WITH` but includes a window function.",
+    "SQL": "SELECT T1.s_name, COUNT(*) AS total_parts, RANK() OVER (ORDER BY COUNT(*) DESC) AS supplier_rank FROM supplier AS T1 INNER JOIN partsupp AS T2 ON T1.s_suppkey = T2.ps_suppkey GROUP BY T1.s_suppkey, T1.s_name;",
+    "difficulty": "Window"
+  }
+}
+
+*** Example 5 ***
+Database Schema: 
+CREATE TABLE payments (
+    payment_id INTEGER PRIMARY KEY,
+    user_id INTEGER,  
+    amount REAL,
+    payment_date DATE
+    FOREIGN KEY (user_id) REFERENCES users(s_suppkey)
+);
+
+CREATE TABLE logins (
+    login_id INTEGER PRIMARY KEY,
+    u_id INTEGER, 
+    login_time DATETIME,
+    ip_address TEXT
+    FOREIGN KEY (u_id) REFERENCES users(s_suppkey)
+);
+
+{
+  "text_to_sql_pair_1": {
+    "question": "List all login times along with payment amounts made by the same user.",
+    "chain_of_thought_reasoning": "We want to combine data from both `logins` and `payments` for the same user. Since `user_id` and `u_id` represent the same foreign key from different tables, we can join `payments.user_id = logins.u_id`. Then we select `login_time` and `amount`.",
+    "SQL": "SELECT l.login_time, p.amount FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+    "difficulty": "simple"
+  },
+  "text_to_sql_pair_2": {
+    "question": "Which users have made payments and logged in on the same day?",
+    "chain_of_thought_reasoning": "We join `logins` and `payments` using `l.u_id = p.user_id`. Then we compare the `DATE(l.login_time)` to `p.payment_date` to find users who did both on the same day. Use `DISTINCT` to avoid duplicate user IDs.",
+    "SQL": "SELECT DISTINCT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE DATE(l.login_time) = p.payment_date;",
+    "difficulty": "moderate"
+  },
+  "text_to_sql_pair_3": {
+    "question": "For each login, show the time and how it ranks among other logins by the same user.",
+    "chain_of_thought_reasoning": "We are ranking each login per user. Since we must use both tables, we join `logins` and `payments` on `u_id = user_id`. Then we apply a window function `RANK()` partitioned by `u_id` and ordered by `login_time`.",
+    "SQL": "SELECT l.login_id, l.login_time, RANK() OVER (PARTITION BY l.u_id ORDER BY l.login_time) AS login_rank FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+    "difficulty": "window"
+  },
+
+  "text_to_sql_pair_4": {
+    "question": "Which user had the earliest login time among those who made a payment greater than 500?",
+    "chain_of_thought_reasoning": "We filter payments to find users who paid more than 500, then join with `logins` on `u_id = user_id` and order logins ascending by time. `LIMIT 1` gives the earliest login.",
+    "SQL": "SELECT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE p.amount > 500 ORDER BY l.login_time ASC LIMIT 1;",
+    "difficulty": "challenging"
+  }
+}

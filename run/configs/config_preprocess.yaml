@@ -1,0 +1,32 @@
+setting_name: SCHEMALESS
+prep_dir_name: "prep_schemaless" 
+
+data_mode: 'dev' # train, dev or test
+dataset: 'bird' # bird or spider
+db_ids: ['california_schools'] 
+# write specific db_ids 
+# ['california_schools', 'card_games', 'codebase_community', 'debit_card_specializing', 'european_football_2']
+# ['financial', 'formula_1', 'student_club', 'superhero', 'thrombosis_prediction', 'toxicology']
+granularity_level: 'column'
+seed: 42
+
+preprocess:
+  db_values_preprocess:
+    signature_size: 100 # Size of the MinHash signature
+    n_gram: 3 # N-gram size for the MinHash
+    threshold: 0.01 # Threshold for the MinHash lr_scheduler_type
+
+  sub_schema_generator:
+    granularity_level: 'column'
+    db_ss_configs: "./run/configs/db_ss_configs.yaml"
+
+  sample_generator:
+    granularity_level: 'column'
+    model: "gemini-2.5-flash" # gpt-4o-mini | gemini-2.0-flash | gemini-2.5-flash | gemini-2.5-pro
+    column_value_cnt: 5 # number of value for each column provided in the prompt during example generation
+    sample_count_edf: 3 # Sample count for each difficulty level (simple, moderate, challenging)
+    eval_in_generation: False
+    
+  db_completion_dataset:
+    db_completion_configs: "./run/configs/db_completion_configs.yaml"
+

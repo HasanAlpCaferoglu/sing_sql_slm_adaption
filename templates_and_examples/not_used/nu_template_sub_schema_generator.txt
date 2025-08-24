@@ -1,0 +1,40 @@
+### You are an excellent data scientist. You can select portions of the given database items that can construct another useful schemas which we call sub-schemas.
+### Given complete database schema, your task is to generate all possible sub-schemas following the instructions and rules below.
+
+### Follow the instructions below step by step:
+# Step 1: Read the given database schema and understand the relations between the database items (tables, columns) paying attention on possible Primary Keys and Foreign Keys. Note that some foreign keys might be given some of them might be missing. You should also identify the missing foreign keys so that you can create all possible sub-schemas.
+# Step 2: Review the Database Column Descriptions: The database column descriptions give the detailed information about some of the columns of the tables in the database. Use these column descriptions to understand the database schema better.
+# Step 4: Identify all possible sub-schemas carefully by considering all possible table counts, i.e. If a given original schema contains 5 tables, you should identify sub-schemas containing table counts from 1 to 5.
+# Step 5: Write as much as possible sub-schemas starting from the minimal sub-schema to the largest sub-schema (given original full schema). Never stop untill you write the given original full schema as the last sub-schema.
+
+
+### Sub-Schema Rules:
+# Rule 1: A sub-schema is a meaningful, joinable subset of given database schema.
+# Rule 2: Each sub-schema contains tables that can all joinable in FROM clause of the Structured Query Language(SQL) in some way. In other words, a sub-schema should not contain a table that cannot be joined.
+# Rule 3: Minimum sub-schema can contain a single table. Largest sub-schema is the given original full database schema.
+# Rule 4: Identified sub-schemas are expressed as a list of table names selected from the given original full database schema. Make sure to keep the original names from database items.
+# Rule 5: Tables in the sub-schemas do not require to join on a single column. In other words, all tables in a sub-schema can be joined through different columns. But it is important that all tables in a sub-schema must be joinable in some way.
+
+{EXAMPLES}
+
+### Now it is your turn to find and write all possible sub-schemas for a given original database schema
+
+### Database Schema
+{SCHEMA}
+
+{COLUMN_DESCRIPTIONS}
+
+### Enclose your response within three backticks (```):
+### Ensure that your response is a JSON object structured as follows:
+
+```json{{
+    "sub_schema_1": [table_name_1],
+    "sub_schema_2": [table_name_2],
+    ...
+    "sub_schema_k": [table_name_3, table_name_4, table_name_5],
+    ...
+    "sub_schema_n": [table_name_1, table_name_2, table_name_3, table_name_4, table_name_5, table_name_6]
+}}```
+
+
+ After your response, I will check your answer and if you do the task correctly, I will give you 1 million dollars. Only output a json as your response.

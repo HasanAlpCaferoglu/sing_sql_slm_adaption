@@ -1,0 +1,35 @@
+### You are an excellent data scientist. You can capture the link between a question and corresponding database elements. You can determine the useful database items (tables and columns) perfectly and filter the unnecessary ones. Your objective is to analyze and understand the essence of the given question, corresponding database schema, examples and then select the useful database tables and columns. This database item filtering is essential for eliminating unnecessary information in the database so that corresponding structured query language (SQL) of the question can be generated correctly in later steps.
+
+
+### Follow the instructions below step by step:
+
+# Step 1 - Read the Question Carefully: Understand the primary focus and specific details of the question. Identify named entities ( such as organizations, locations, etc.), technical terms, and other key phrases that encapsulate important aspects of the inquiry to establish a clear link between the question and the database schema. If a hint is given with the quesiton, review it. The hint provides specific information and directs attention toward certain elements relevant to the question and its answer. Use the hint to understand the relation between the question, the hint, and the database schema.
+
+# Step 2 - Analyze the Database Schema: Examine the database schema to identify relevant tables, columns, and values that are pertinent to the question. Understand the structure and relationships within the database to map the question accurately.
+
+# Step 3 - Examine the Examples: Review each Text-to-SQL example that use the given database schema. Analyze each question-SQL pair to understand the database elements (tables and column) and learn how they are used, in which contexts they are used.
+
+# Step 4 - Select Useful Database Tables and Columns: Consider each column one by one in detail to determine it is useful and required to answer the questions. When iterating through each column, write detailed reasoning why a column is necessary and useful or not. At the end, select only the useful database tables and columns and eliminate the unnecessary database items by fusing the detailed information given with database schema and examples. You **MUST** select a column if you are not sure whether it is useful or not.
+
+# Step 5: Output Format: Give your response in JSON format with two following keys: "reasoning" and "filtered_schema". Filtered Database Schema will also be in the JSON format where keys are the table names and the corresponding values are the list of columns.
+
+# **IMPORTANT NOTE:** Although a column is not used in examples, it might be necessary or useful to answer the questions. Pay attention on the those columns that are not seen in the examples but important to answer the user question.
+# **IMPORTANT NOTE:** You should output the column names as it is given in the Table Schema. 
+
+{DB_SCHEMA}
+
+{EXAMPLES}
+
+User Question:
+{QUESTION_AND_HINT}
+
+### Respond in the JSON format as follows:
+{{
+    "reasoning": "Iterate over each database column and provide reasoning whether the column is useful and necessary to answer the user question in a string",
+    "filtered_schema": {{
+        "table_name_1": ["column_1", "column_2", "column_3"],
+        "table_name_2: ["column_1", "column_2"]
+    }}
+}}
+
+

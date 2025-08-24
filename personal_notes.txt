@@ -1,0 +1,96 @@
+
+
+Problems:
+
+#################
+### PROBLEM 1 ###
+#################
+Note that all foreing keys are not set properly. Let's consider debit_card_specializing database as an illustration.
+The Schema of the debit_card_specializing is as follows but missing foreing keys are exist and they are indicated
+
+CREATE TABLE customers{
+    CustomerID PK,
+    Segment,
+    Currency
+}
+
+CREATE TABLE gasstations{
+    GasStationID PK,
+    ChainID,
+    Country,
+    Segment
+}
+
+CREATE TABLE products{
+    ProductID PK,
+    Description
+}
+
+CREATE TABLE transaction_1k{
+    transactionID PK,
+    Date,
+    Time,
+    CustomerID,   --> MISSIN FK --> Should reference to customers.CustomerID
+    CardID,
+    GasStationID, --> MISSIN FK -->  Should reference to gasstations.GasStationID
+    ProductID,    --> MISSIN FK -->  Should reference to products.ProductID
+    Amount,
+    Price
+}
+
+CREATE TABLE yearmonth{
+    CustomerID PK,
+    Date PK,
+    Consumption,
+    FOREIGN KEY CustomerID references customers.CustomerID
+}
+
+
+
+#################
+### PROBLEM 2 ###
+#################
+
+When i manually try to find the foreign keys using following query, all tables seems have a connection because attributes related to ID match
+with each other and it allow me to join the tables. So, this method doesn't give the exactly correct sub-schemas.
+- sql_query = f"SELECT * FROM {t1_name} INNER JOIN {t2_name} ON {t1_name}.{t1_col} = {t2_name}.{t2_col}"
+
+I WILL NOT DO EXECUTION BASE SUB-SCHEMA CONSTRUCTION.
+
+#################
+### PROBLEM 3 ###
+#################
+
+- Should I add orignal db schema into the sub-schema? When we extract embedding of original_schema+user_question on the fly,
+the embedding could be very similar to the embedding of the original schema which is computed in preprocess.
+Even if we remove the embeddings of the original schema, we might encounter a situation where the schema selector part could
+select the largest sub-schema since it could be similar to the original schema most.
+At the same time, not considering original schema as a sub-schema would be dangerous for databases whose foreign keys are not specified completely.
+- To overcome this:
+    1. When we extract embedding of original_schema+user_question on the fly, we add a prompt for schema filtering such as 
+        "Eliminate the irrelevant database items(tables, columns) and focus on only the relevant columns of relevant questions" 
+        or "Determine the sub-schema (part of a schema) that only contains necessary database items." or "compute the embeddings of relevant schema items" 
+    2. Contrastive learning could help to solve this issue.
+
+
+#################
+### PROBLEM 4 ###
+#################
+
+When we try to construct sub-schemas for the column level granularity, there will be huge amount of sub-schema.
+Even table level sub-schema construction result in large amount of possible sub-schema. 
+For example, the table-level sub-schema count is 101 for financial database. 
+Combinations of columns with varying numbers result in enourmous number of sub-schema.
+
+However remember that CHESS and CHASE apply LSH to all database values which contains 
+much more item probably. The point is that our approach generates text-to-sql examples for 
+each sub-schema which takes too much time and costly.
+
+
+Advantages:
+
+###################
+### ADVANTAGE 1 ###
+###################
+One advantageo of this approach could be top-k most relevant sub-schema can be extracted in a short time.
+These different sub-schemas can be used in multi-sql generation module in agentic workflows contributing to diversity.

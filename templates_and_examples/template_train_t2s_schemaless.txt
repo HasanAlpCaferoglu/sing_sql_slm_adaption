@@ -1,0 +1,29 @@
+*** You are an expert SQL generator. Your task is to generate a SQL query for the given user question, considering *only* the {DB_ID} database.
+
+### INTRUCTIONS:
+1. Understand the question:
+    - Carefully read and interpret the user’s natural language question.
+    - Consider only the {DB_ID} database when analyzing the question.
+    - Analyze the relation between question and database items.
+2. Determine the required database items:
+    - In order to construct the SQL query to answer the user question, Determine which tables, columns, and values from the database are needed to answer the question.
+    - Analyze the relations between selected tables and columns 
+3. Apply Logical Filtering:
+    - Identify the required filtering conditions, aggregations, groupings, window functions, orderings or limit needed to fulfill the intent of the question.
+4. Construct the SQL query:
+    - Construct a valid and executable SQLite SQL query that directly answers the question using only the relevant parts of the schema.
+
+### Now it is your turn. Generate SQLite SQL query for the following question considering **only** {DB_ID} database.
+
+*** Question ***
+{QUESTION}
+
+### Respond in the following format:
+<reasoning>
+Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.
+</reasoning>
+<answer>
+Generated SQLite SQL query to answer the question.
+</answer>
+
+### Now is your turn to respond in the above format:

@@ -1,0 +1,98 @@
+setting_name: SCHEMALESS
+prep_dir_name: "prep_schemaless" 
+
+data_mode: 'dev' # train, dev or test
+dataset: 'bird' # bird or spider
+db_ids: ['california_schools']
+granularity_level: 'column'
+seed: 42
+
+preprocess:
+  sub_schema_generator:
+    granularity_level: 'column'
+    db_ss_configs: "./run/configs/db_ss_configs.yaml"
+
+  sample_generator:
+    granularity_level: 'column'
+    model: "gemini-2.0-flash" # gpt-4o-mini | gemini-2.0-flash
+    column_value_cnt: 5 # number of value for each column provided in the prompt during example generation
+    sample_count_edf: 3 # Sample count for each difficulty level (simple, moderate, challenging)
+    
+  db_completion_dataset:
+    db_completion_configs: "./run/configs/db_completion_configs.yaml"
+
+train:
+  dataset_tasks: ['t2s', 't2sws'] # ['t2s', 'sl', 'dc', 'slws', 't2sws']
+  use_curriculum_learning: False # if false, data points will be shuffled.
+  data_portion: [0, 1] # training set data portion
+  use_col_value_and_descriptions: False
+  use_grpo: True
+  use_unsloth: True
+  use_reasoning: True
+  output_format: "xml" # ['xml', 'text'] # This doesn't matter if use_reasoning false
+  shuffle_dataset_tasks_items: True
+  base_model_name: "unsloth/Qwen2.5-Coder-3B-Instruct-bnb-4bit"
+  load_in_4bit: True # 4bit quantization to reduce memory usage. Can be False.
+  use_lora: True
+  train_workers_num: 1
+  lora_params:
+    lora_r: 64
+    lora_alpha: 64
+    lora_dropout: 0.05 # unsloth supports any, but 0 is optimized
+    bias: "none"
+    lora_target_modules: ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  
+  training_params:
+    num_train_epochs: 1 # old_values 
+    per_device_train_batch_size: 1 # For SFT [2, 4]. For GRPO [1]
+    gradient_accumulation_steps: 8 # Effective batch size = batch_size * gradient_accumulation. Set it 4 for smooth training
+    per_device_eval_batch_size: 1  # Adjust based on GPU memory # old_values[2, 4]
+    eval_accumulation_steps: 8 # If left unset, the whole predictions are accumulated on the device accelerator before being moved to the CPU (faster but requires more memory).
+    learning_rate: 1e-6 # For SFT use 2e-4, for GRPO use 5e-6
+    lr_scheduler_type: "cosine" # "linear", "cosine", etc. For both SFT and GRPO use cosine
+    warmup_ratio: 0.1         # For SFT use 0.03, for GRPO use 0.1
+    weight_decay: 0.1          # For SFT use 0.01, for GRPO use 0.1
+    optim: "adamw_8bit"   # For SFT use paged_adamw_8bit, for GRPO use adamw_8bit
+    logging_steps: 250           # Log metrics every N steps. GRPO use 1
+    save_steps: 250             # Save checkpoint every N steps
+    save_total_limit: 2         # Keep only the last N checkpoints
+    max_seq_length: 65536        # Max sequence length for tokenizer and model. SFT -> 16384 | GRPO -> 32768 or 65536
+    packing: False              # Set to true for SFTTrainer to pack multiple short sequences. This can make trainer 5x faster for short sequences
+    num_generations: 6 # For GRPO. Decrease if out of memory
+    max_prompt_lenght: 40000 # For GRPO
+    max_grad_norm: 0.1 # For GRPO
+    reward_functions_names: ["syntax_check_reward",  "exec_acc_reward", "f1_acc_reward", "schema_linking_reward", "n_gram_similarity_reward", "format_reward"] 
+    # For GRPO, list of reward functions:
+    # [syntax_check_reward,  exec_acc_reward, f1_acc_reward, rlaif_reward, schema_linking_reward, n_gram_similarity_reward, format_reward]
+
+    
+
+
+evaluation:
+  eval_base_model: False
+  use_schema: False # if eval_base_model=True, then this is automatically made True
+  use_reasoning: False  
+  output_format: "xml" # ['xml', 'text', 'json']
+  use_few_shot: False
+  max_new_tokens: 2048
+  temperature: 0.0
+  top_p: 1
+  
+### MODELS ###
+# Qwen/Qwen2.5-Coder-<ParamNo>B-Instruct-<GGUF / AWQ / GPTQ-Int4 / GPTQ-Int8 / >
+# Qwen/Qwen2.5-Coder-1.5B-Instruct # 32k Context Lenght
+# Qwen/Qwen2.5-Coder-3B-Instruct # 32k Context Lenght
+# Qwen/Qwen2.5-Coder-7B-Instruct # 128k Context Lenght
+
+### UNSLOTH MODELS ###
+## Qwen 2.5 Coder Family
+
+# unsloth/Qwen2.5-Coder-0.5B-Instruct-bnb-4bit
+# unsloth/Qwen2.5-Coder-1.5B-Instruct-bnb-4bit
+# unsloth/Qwen2.5-Coder-3B-Instruct-bnb-4bit
+# unsloth/Qwen2.5-Coder-7B-Instruct-bnb-4bit
+# unsloth/Qwen2.5-Coder-14B-Instruct-bnb-4bit
+
+# unsloth/Qwen2.5-Coder-3B-bnb-4bit
+# unsloth/Qwen2.5-Coder-7B-bnb-4bit
+# unsloth/Qwen2.5-Coder-14B-bnb-4bit

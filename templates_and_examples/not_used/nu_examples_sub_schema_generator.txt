@@ -1,0 +1,209 @@
+### Sub-Schema Generation Examples
+
+*** Example 1 ***
+### Database: Sales
+### Database Schema
+
+CREATE TABLE Customers (
+    CustomerID PK,
+    FirstName,
+    MiddleInitial,
+    LastName
+)
+
+CREATE TABLE Employees (
+    EmployeeID PK,
+    FirstName,
+    MiddleInitial,
+    LastName
+)
+
+CREATE TABLE Products (
+    ProductID PK,
+    Name,
+    Price
+)
+
+CREATE TABLE Sales (
+    SalesID PK,
+    SalesPersonID,
+    CustomerID,
+    ProductID,
+    Quantity
+)
+
+### All possible sub-schemas for the Sales database:
+{{
+    "sub_schema_1": [Customers],
+    "sub_schema_2": [Employees],
+    "sub_schema_3": [Products],
+    "sub_schema_4": [Sales],
+    "sub_schema_5": [Customers, Sales],
+    "sub_schema_6": [Employees, Sales],
+    "sub_schema_7": [Products, Sales],
+    "sub_schema_8": [Customers, Sales, Employees],
+    "sub_schema_9": [Customers, Sales, Products],
+    "sub_schema_10": [Employees, Sales, Products],
+    "sub_schema_11": [Employees, Sales, Products],
+    "sub_schema_12": [Customers, Sales, Employees, Products]
+}}
+
+*** Example 2 ***
+### Database: authors
+### Database Schema
+
+CREATE TABLE Author (
+    Id PK,
+    Name,
+    Affiliation, 
+)
+
+CREATE TABLE Conference (
+    Id PK,
+    ShortName,
+    FullName,
+    HomePage,
+)
+
+CREATE TABLE Journal (
+    Id PK,
+    ShortName,
+    FullName,
+    HomePage
+)
+
+CREATE TABLE Paper (
+    Id PK,
+    Title,
+    Year,
+    ConferenceId,
+    JournalId,
+    Keyword
+)
+
+CREATE TABLE PaperAuthor (
+    PaperId,
+    AuthorId,
+    Name,
+    Affiliation
+)
+
+### All possible sub-schemas for the authors database:
+{{
+    "sub_schema_1": [Author],
+    "sub_schema_2": [Conference],
+    "sub_schema_3": [Journal],
+    "sub_schema_4": [Paper],
+    "sub_schema_5": [PaperAuthor],
+    "sub_schema_6": [Author, PaperAuthor],
+    "sub_schema_7": [Conference, Paper],
+    "sub_schema_8": [Journal, Paper],
+    "sub_schema_9": [Paper, PaperAuthor],
+    "sub_schema_10": [Author, PaperAuthor, Paper],
+    "sub_schema_11": [Conference, Paper, PaperAuthor],
+    "sub_schema_12": [Journal, Paper, PaperAuthor],
+    "sub_schema_13": [Author, PaperAuthor, Paper, Conference],
+    "sub_schema_14": [Author, PaperAuthor, Paper, Journal],
+    "sub_schema_15": [Author, PaperAuthor, Paper, Conference, Journal],
+
+}}
+
+*** Example 3 ***
+### Database: law_episode
+### Database Schema
+
+CREATE TABLE Episode (
+    Id PK,
+    series,
+    season,
+    episode,
+    number_in_series,
+    title,
+    summary,
+    air_date,
+    episode_image,
+    rating,
+    votes,
+)
+
+CREATE TABLE Keyword (
+    episode_id PK,  
+    keyword PK
+)
+
+CREATE TABLE Person (
+    person_id PK,
+    name,
+    birthdate,
+    birth_name,
+    birth_place,
+    birth_region,
+    birth_country,
+    height_meters,
+    nickname
+)
+
+CREATE TABLE Award (
+    award_id PK,
+    organization,
+    year,
+    award_category,
+    award,
+    series,
+    episode_id, 
+    person_id,  
+    role,
+    result
+)
+
+CREATE TABLE Credit (
+    episode_id PK,  
+    person_id PK,  
+    category,
+    role,
+    credited
+)
+
+CREATE TABLE Vote (
+    episode_id PK,  (FK to Episode.Id)
+    stars,
+    votes,
+    percent
+)
+
+### All possible sub-schemas for the law_episode database:
+{{
+    "sub_schema_1": [Episode],
+    "sub_schema_2": [Keyword],
+    "sub_schema_3": [Person],
+    "sub_schema_4": [Award],
+    "sub_schema_5": [Credit],
+    "sub_schema_6": [Vote],
+    "sub_schema_7": [Episode, Keyword],
+    "sub_schema_8": [Episode, Award],
+    "sub_schema_9": [Episode, Credit],
+    "sub_schema_10": [Episode, Vote],
+    "sub_schema_11": [Person, Award],
+    "sub_schema_12": [Person, Credit],
+    "sub_schema_13": [Episode, Keyword, Award],
+    "sub_schema_14": [Episode, Keyword, Credit],
+    "sub_schema_15": [Episode, Keyword, Vote],
+    "sub_schema_16": [Episode, Award, Credit],
+    "sub_schema_17": [Episode, Award, Person],
+    "sub_schema_18": [Episode, Award, Vote],
+    "sub_schema_19": [Episode, Credit, Vote],
+    "sub_schema_20": [Episode, Credit, Person],
+    "sub_schema_21": [Person, Award, Credit],
+    "sub_schema_22": [Episode, Keyword, Award, Credit],
+    "sub_schema_23": [Episode, Keyword, Award, Vote],
+    "sub_schema_24": [Episode, Keyword, Credit, Vote],
+    "sub_schema_25": [Episode, Award, Credit, Vote],
+    "sub_schema_26": [Episode, Keyword, Award, Person],
+    "sub_schema_27": [Episode, Keyword, Credit, Person],
+    "sub_schema_28": [Episode, Award, Credit, Person],
+    "sub_schema_29": [Episode, Keyword, Award, Credit, Vote],    
+    "sub_schema_30": [Episode, Keyword, Award, Credit, Person],  
+    "sub_schema_31": [Episode, Keyword, Award, Vote, Person],   
+    "sub_schema_32": [Episode, Keyword, Credit, Vote, Person],    
+    "sub_schema_33": [Episode, Award, Credit, Vote, Person],   
+}}

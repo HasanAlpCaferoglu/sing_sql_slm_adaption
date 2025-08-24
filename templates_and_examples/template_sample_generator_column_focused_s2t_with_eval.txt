@@ -1,0 +1,192 @@
+### You are an excellent data scientist. You can understand the given database schema and relations between the schema items perfectly.
+### Given database schema, which is a part of larger chema, your task is to generate text-to-sql examples for the given database schema using all of its tables.
+
+### Follow the rules below step by step:
+1. Understand the Schema:
+    - Carefully read the provided database schema. Identify all tables, their columns, and any foreign key relationships between them.
+    - Some foreign keys may be explicitly stated.
+    - Others may be implicit or missing, so you need to infer the missing foreign key relationships by matching column names and data types.
+    - Analyze the column names and data types to infer relationships (including foreign key constraints, both explicit and implicit).
+    - It is **important** to note that some columns in the given sub-schema may refers to a table not included in the given sub-schema (i.e. a table whose CREATE TABLE statemet not given). However, two tables in schema might be joinable on their columns which refer to an another column whose table not exist in the given sub-schema as given in examples. 
+    - Read the given **Detailed Column Information** to deepen your semantic understanding of the schema.
+    - **Use the example values provided in COLUMN_VALUES as inspiration when writing SQL queries and corresponding natural language questions**. Leverage these values to create realistic and diverse SQL queries and corresponding natural language questions. For example, if a column has values like `"Urban"`, `"Rural"`, or `"Suburban"`, write SQLs and questions that naturally reference these concepts.
+
+2. Focus on a Column 
+    - Across all your generated queries, make sure to use {FOCUSED_COLUMN} column along with other columns in the schema. 
+
+3. Generate SQL Queries, analyze the generated SQL query and then write Natural Language Questions
+    - **Important Guidelines**
+        - Start by writing the SQL query using correct logic and structure.
+            - The goal is not only to generate syntactically correct SQL queries but to ensure that each query **serves a clear and reasonable purpose** and the corresponding user question is something that a human might genuinely ask.
+            - Avoid contrived combinations of fields that don’t naturally belong together or questions that serve no analytical or practical purpose. 
+        - Then reverse-engineer a semantically meaningful and logically sound user question that the query answers.
+        - Make sure the natural language user question:
+            - Makes **sense from a real-world human perspective**.
+            - Does **not directly reference column or table names**, especially if a column or table names are abbreviations of a phrase or words.
+            - Is paraphrased, indirect, and realistic.
+
+    - For each example, follow these steps carefully:
+
+        **(a) SQL Query (in SQLite dialect)**  
+        - Start with the correct SQL query that uses only the provided tables and covers all required logic.
+        - Leverage from the example values provided in COLUMN_VALUES as inspiration when writing SQL queries
+        - Ensure the query uses best practices:
+            - Perform `JOIN`s before `MAX()` or `MIN()`.
+            - Use `GROUP BY` before `ORDER BY ... ASC|DESC`.
+            - Use `IS NOT NULL` if a column may contain NULLs.
+            - Prefer `INNER JOIN` over nested `SELECT`s, unless needed for complexity.
+            - Use `STRFTIME()` for date parsing.
+            - Use `SELECT DISTINCT` for uniqueness.
+            - Use both `MAX()`/`MIN()` and `ORDER BY ... LIMIT 1` constructs for extremal values, equally and reasonably.
+
+        **(b) SQL Analysis**  
+        Write a detailed and structured analysis that explains the logic, purpose, and behavior of the SQL query. This analysis serves as the bridge between the SQL syntax and the natural language question and should ensure both correctness and human interpretability.
+        The analysis **MUST** follow the the steps below in given order.:
+            1. First, for each column used in the SQL query, apply natural language question mapping:
+                - Look up its meaning and example values.
+                - Map it to a realistic concept that a non-technical user would reference in natural conversation.
+                - Understand what each column represents
+                - Reflect that name from now on.
+                - **Do not skip this step. The clarity and naturalness of the user question depends entirely on this paraphrasing process.**
+            2. CRITICAL SEMANTIC VALIDATION
+              - For each key column used in the query (especially those in SELECT, WHERE, and aggregation clauses), explicitly state its precise meaning based on the "Detailed Column Information".
+              - This step serves as a mandatory check to prevent logical errors. For instance, if the schema says `enroll12` is "enrollment (1st-12nd grade)," you must state this and ensure the final question does not misrepresent it as "12th-grade enrollment." Acknowledging the true meaning is required.
+            3. Secondly, explain query logic and operations
+                - Clearly describe each operation applied in the query (e.g., filter, join, aggregation, ranking, window function).
+                - Explain why these operations are used, and how they support the query's goal using column descriptions.
+            4. Third, write the goal of the query using the column descriptions.
+                - Describe the specific insight or outcome the query is designed to retrieve  using the column descriptions..
+                - Explain the real-world reasoning or analytical purpose behind the query  using the column descriptions..
+            5. Fourth, Conceptual Mapping to Natural Language
+                - Describe which data concepts or metrics will be indirectly referenced in the user’s question
+                - By looking up the column descriptions and meanings given, for every key column used, specify how it will be paraphrased or reworded in the natural language question so it sounds natural and asked by a non-technical user.
+                - Ensure mappings are meaningful and not literal translations of abbreviated column names.
+
+        **(c) User Question (Natural Language Formulation)**  
+        Write a natural language question for the written SQL query:
+            - You MUST use the detailed column descriptions or meanings given under column information to guide how each column is paraphrased or referenced when constructing the question.
+            - For each column used in the SQL query:
+                  - Look up its meaning and example values.
+                  - Map it to a realistic concept that a non-technical user would reference in natural conversation.
+                  - Reflect that concept (not the literal name) in the final question.
+            - **The Golden Rule of Semantic Accuracy:** The question **MUST** be a perfect reflection of the *true meaning* of the columns used in the query, as defined in the **Detailed Column Information**. The column descriptions are the absolute source of truth. Violating this rule invalidates the entire example.
+            - **Avoid Semantic Mismatches at All Costs:** Before finalizing the question, you must perform a final check: Does my question ask for something that the SQL query *actually provides* based on the explicit column definitions?
+              - **Example of a Critical Error to Avoid:** If the SQL query uses the column `enroll12`, and its description states it is "enrollment for 1st-12th grade", then the natural language question **MUST NOT** ask for "12th-grade enrollment". Any question that misrepresents the underlying data definition is a failure.
+            - Clearly reflects the intent of the SQL query.
+            - Does not explicitly reference table or column names from the schema.
+            - **IMPORTANT:** Replaces abbreviations and short-form column names with understandable, full-form descriptions or phrases that a non-technical user might say.  (e.g., say “school district identifier assigned by the national education statistics agency” instead of “NCESDist”).
+            - **Reflects realistic phrasing, including synonyms, paraphrasing, and indirect expressions (e.g., “Which region saw the largest increase...” instead of “MAX(value) GROUP BY region”).**
+
+        **(d) Logical Consistency Check — Is This a Reasonable Question to Ask?** 
+        After writing the SQL and corresponding user question, perform a final logicality evaluation of the pair. This step ensures that the SQL query and user question are realistic, meaningful, and appropriate given the schema. The goal is to verify that the generated example serves a genuine analytical or practical purpose and does not contain schema misuse, illogical joins, or unrealistic information needs.
+        This step should include two step:
+            1. Analyze Question and SQL logic:
+                - Write a concise but detailed analysis evaluating whether the SQL query and its corresponding natural language question make sense given the sub-schema. 
+                - Realistic User Intent: Would a data analyst, policy-maker, or end-user reasonably ask this question to gain insight from the database?
+                - If the query/question is meaningful and relevant to the schema and real-world use cases, then explain why it is logical. Otherwise, explain what makes it flawed,
+            2. A final verdict on whether the query-question pair is logical and valid.
+                - Use True if the question-sql pair is sound and realistic.
+                - Use False if the query or question is flawed due to schema misuse, logical incoherence, or contrived combinations.
+
+**IMPORTANT NOTE**:  Ensure that across all examples, there is a balanced use of MAX/MIN functions and ORDER BY ... LIMIT 1 patterns for retrieving extreme values. Use both ASC and DESC directions as appropriate.
+    
+4. Generate SQL-Question Pairs at Varying Difficulty Levels In The Following Order
+    - Simple: Write {N} number of simple SQL-Question pairs involving straightforward joins and filters, basic aggregation
+    - Moderate: Write {N} number of moderate SQL-Question pairs requiring more logic, such as subqueries or grouping with conditions
+    - Challenging: Write {N} number of challenging SQL-Question pairs including window functions supported by SQLite dialect(like `OVER` clause, `PARTITION BY` clause, `RANK` clause), nested subqueries, multiple aggregations, complex conditions or conditional expression (like `CASE` expression)
+    - Window Functions (Additional Category):  Write {N} SQL-Question pairs that explicitly utilize window functions supported by SQLite dialect such as `OVER` clause, `PARTITION BY`, `ORDER BY`, `RANK()`, `ROW_NUMBER()`, `ROWS_BETWEEN`
+
+5. Rules for the SQL queries that will be generated:
+    - Always perform JOINs before using MAX() or MIN().
+    - Use `GROUP BY <column>` before `ORDER BY <column> ASC|DESC` to ensure distinct values.
+    - If a column may contain NULL values (indicated by "None" in value examples or explicitly), use `JOIN` or `WHERE <column> IS NOT NULL`.
+    - Only include tables essential to answer the question.
+    - Use `SELECT DISTINCT` when the question requires unique values (e.g., IDs, URLs). 
+    - Never use `|| ' ' ||` or any other method to concatenate strings in the `SELECT` clause. 
+    - Prioritize `INNER JOIN` over nested `SELECT` statements.
+    - Utilize `STRFTIME()` for date manipulation (e.g., `STRFTIME('%Y', SOMETIME)` to extract the year).
+
+6. Ensure Diversity in the generated SQL-Question Pairs
+    - Ensure that the generated SQL-Question pairs are as diverse as possible in structure, logic, and linguistic style.
+    - Generated SQL queries in examples must used for varying purposes.
+    - Use both `MAX()`/`MIN()` and `ORDER BY ... LIMIT 1` approaches for extremal values.
+    - Vary natural phrasing and indirect references to schema columns.
+
+7. Use Indirect Language in Some Questions:
+    - Make sure that some user questions use synonyms, reworded expressions, or indirect references to database elements (such as table names, column names, and values).
+    - These questions should avoid directly stating the exact names of tables, columns, or values as defined in the schema.
+    - However, the corresponding SQL queries must use the exact schema elements.
+    - These questions evaluate the model’s ability to understand semantics and generalize beyond exact string matching.
+
+8. Sometimes use JOIN with Subqueries (only for complex queries)
+    - For schemas involving several tables (e.g., 3 or more), occasionally generate SQL examples that require a JOIN where one side is a subquery.
+    - This should happen only for challenging difficulty examples, with a 25% probability.
+    - The subquery used in the JOIN can involve:
+        - Aggregations (e.g., COUNT, SUM, AVG) combined with GROUP BY and HAVING clauses.
+        - Filtering or ranking conditions that are naturally better expressed through a subquery.
+    - The subquery must have an alias (e.g., AS T2) and must be properly joined with the outer table.
+    - Make sure the subquery is meaningful and simplifies or enables the logic needed for the main query.
+    - Subquery JOINs should not appear in simple or moderate questions to keep the complexity progressive and realistic. And such queries should be generated rarely.
+
+
+【Examples】    
+{EXAMPLES}
+
+### Now it is your turn to write column focused SQL-question (SQL-to-text) pairs for a given database schema and given column. 
+### Follow the rules written above strictly.
+### Use aggregations, window functions supported by SQLite dialect, mathematical expressions and other functions in the generated SQL queries, especially in challenging ones, and generate user questions accordingly.
+
+【Table creation statements】
+{SUB_SCHEMA}
+
+【Column Meanings】
+{COLUMN_MEANINGS}
+
+【Column Values】
+{COLUMN_VALUES}
+
+【Focus Column】
+{FOCUSED_COLUMN}
+
+### Ensure that use {FOCUSED_COLUMN} column along with other columns in all of your generated examples
+### Ensure that each SQL query you generate is logically and structurally distinct from the others.
+### Let's think step by step and generate User SQL - Question pairs for the given database schema. After your response, I will check your answer and if you do the task correctly, I will give you 1 million dollars. Only output a json as your response. 
+### Enclose your response within three backticks (```):
+### Ensure that your response is a JSON object structured as follows:
+
+
+```json{{
+    "text_to_sql_pair_1": {{
+        "difficulty": "simple | moderate | challenging | window "
+        "SQL": "Generated SQLite SQL query a given database schema.",
+        "sql_analysis": "Detailed analysis for the SQL query that outlines the intention of the query and what it will generate after executing it",
+        "question": "Natural language user question for a generated SQL query.", 
+        "question_and_sql_logic_analysis": "Explanation of whether the query and question are a logical and coherent pair given the database schema.",
+        "is_logical": True | False
+        }},
+    "text_to_sql_pair_2": {{
+        "difficulty": "simple | moderate | challenging | window "
+        "SQL": "Generated SQLite SQL query a given database schema.",
+        "sql_analysis": "Detailed analysis for the SQL query that outlines the intention of the query and what it will generate after executing it",
+        "question": "Natural language user question for a generated SQL query.", 
+        "question_and_sql_logic_analysis": "Explanation of whether the query and question are a logical and coherent pair given the database schema.",
+        "is_logical": True | False
+        }},
+    "text_to_sql_pair_3": {{
+        "difficulty": "simple | moderate | challenging | window "
+        "SQL": "Generated SQLite SQL query a given database schema.",
+        "sql_analysis": "Detailed analysis for the SQL query that outlines the intention of the query and what it will generate after executing it",
+        "question": "Natural language user question for a generated SQL query.", 
+        "question_and_sql_logic_analysis": "Explanation of whether the query and question are a logical and coherent pair given the database schema.",
+        "is_logical": True | False
+        }},
+    ...
+    "text_to_sql_pair_4N": {{
+        "difficulty": "simple | moderate | challenging | window "
+        "SQL": "Generated SQLite SQL query a given database schema.",
+        "sql_analysis": "Detailed analysis for the SQL query that outlines the intention of the query and what it will generate after executing it",
+        "question": "Natural language user question for a generated SQL query.", 
+        "question_and_sql_logic_analysis": "Explanation of whether the query and question are a logical and coherent pair given the database schema.",
+        "is_logical": True | False
+        }}
+}}```

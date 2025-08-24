@@ -1,0 +1,47 @@
+{
+    "file_path": "../dataset/bird-sql/dev/dev_with_few_shots.json",
+    "config": "bm25",
+    "overall_schema_performance": {
+        "t_num_tp": 150,
+        "t_num_fp": 107,
+        "t_num_fn": 0,
+        "c_num_tp": 420,
+        "c_num_fp": 478,
+        "c_num_fn": 11,
+        "table_precision": 0.5836575875486382,
+        "table_recall": 1.0,
+        "column_precision": 0.46770601336302897,
+        "column_recall": 0.974477958236659,
+        "column_strict_recall_rate": 0.8876404494382022,
+        "column_recalls": []
+    },
+    "all_few_shot_schema_performance": {
+        "t_num_tp": 150,
+        "t_num_fp": 117,
+        "t_num_fn": 0,
+        "c_num_tp": 376,
+        "c_num_fp": 2154,
+        "c_num_fn": 55,
+        "table_precision": 0.5617977528089888,
+        "table_recall": 1.0,
+        "column_precision": 0.14861660079051384,
+        "column_recall": 0.8723897911832946,
+        "column_strict_recall_rate": 0.5168539325842697,
+        "column_recalls": []
+    },
+    "topk_few_shot_schema_performance": {
+        "top_k": 6,
+        "t_num_tp": 150,
+        "t_num_fp": 105,
+        "t_num_fn": 0,
+        "c_num_tp": 310,
+        "c_num_fp": 824,
+        "c_num_fn": 121,
+        "table_precision": 0.5882352941176471,
+        "table_recall": 1.0,
+        "column_precision": 0.27336860670194,
+        "column_recall": 0.7192575406032483,
+        "column_strict_recall_rate": 0.25842696629213485,
+        "column_recalls": []
+    }
+}

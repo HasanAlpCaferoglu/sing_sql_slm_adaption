@@ -1,0 +1,20 @@
+torch==2.6.0
+torchvision==0.21.0
+torchaudio==2.6.0
+unsloth[cu121-torch240] @ git+https://github.com/unslothai/unsloth.git
+xformers
+vllm==0.8.4 # for grpo training. It is not used.
+deepspeed==0.16.9
+python-dotenv
+func-timeout
+sqlglot
+sqlvalidator
+pydantic
+openai
+google-genai
+wandb
+langchain-huggingface
+langchain-qdrant
+langchain-google-genai
+grpcio-status==1.48.2
+protobuf<4.0.0

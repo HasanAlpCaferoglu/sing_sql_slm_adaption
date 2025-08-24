@@ -1,0 +1,152 @@
+dev:
+  california_schools:
+    table_cnt: 3
+    column_cnt: 89
+    avg_col_cnt_per_table: 29.66
+    table_level_ss_table_counts: [3, 2, 1]
+    sliding_window_length: 3  # in addition to connection columns number of columns that will be considered in a window 
+    stride: 2
+    min_column_example_cnt: 400 # previously 200
+    # Total number of column level sub-schema for california_schools: 2249 (When table_cnts:[3, 2, 1], window: 3 stride:2) # without add_foreign_keys_to_db (no need) | with ttc (third table column)
+    # Total number of column level sub-schema for california_schools: 11420 (When table_cnts:[3, 2, 1], window: 3 stride:1) # without add_foreign_keys_to_db (no need) | with ttc (third table column)
+    # Total number of column level sub-schema for california_schools: 2179 (When table_cnts:[3, 2, 1], window: 3 stride:2)
+  
+  card_games:
+    table_cnt: 6
+    column_cnt: 115
+    avg_col_cnt_per_table: 19.16
+    table_level_ss_table_counts: [3, 2, 1]
+    sliding_window_length: 3 # in addition to connection columns number of columns that will be considered in a window 
+    stride: 2 
+    min_column_example_cnt: 400 # previously 200
+    # Total number of column level sub-schema for card_games: 2938 (When table_ounts:[3,2,1], window:3, stride:2) # with add_foreign_keys_to_db | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 13352 (When table_ounts:[3,2,1], window:2, stride:1) # with add_foreign_keys_to_db | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 1770 (When table_ounts:[4,3,2,1], window:2, stride:1) # without manual_db_joinables | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 1457 (When table_ounts:[4,3,2,1], window:3, stride:1) # without manual_db_joinables | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 611 (When table_ounts:[4,3,2,1], window:3, stride:2) # without manual_db_joinables | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 1176 (When table_ounts:[3,2,1], window:3, stride:1) # without manual_db_joinables | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for card_games: 510 (When table_ounts:[3,2,1], window:3, stride:2) # with manual_db_joinables | with update_foreign_keys
+    # Total number of column level sub-schema for card_games: 31090 (When table_ounts:[4,3,2,1], window:3, stride:1) # with manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for card_games: 1444 (When table_ounts:[4,3,2,1], window:3, stride:1) # without manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for card_games: 1347 (When table_ounts:[4,3,2], window:3, stride:1) # # without manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for card_games: 549 (When table_ounts:[4,3,2], window:3, stride:2) # # without manual_db_joinables  | with update_foreign_keys
+  
+  codebase_community:
+    table_cnt: 8
+    column_cnt: 71
+    avg_col_cnt_per_table: 8.875
+    table_level_ss_table_counts: [4, 3, 2, 1]
+    sliding_window_length: 3 # in addition to connection columns number of columns that will be considered in a window 
+    stride: 2
+    min_column_example_cnt: 400 # previously 200
+    # Total number of column level sub-schema for codebase_community: 3533 (When table_cnts:[4,3,2,1], window:3, stride:2) # without manual_db_joinables  | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for codebase_community: 1134 (When table_cnts:[3,2,1], window:3, stride:2) # without manual_db_joinables  | without update_foreign_keys | with ttc (third table column)
+    # Total number of column level sub-schema for codebase_community: 3152 (When table_cnts:[4,3,2,1], window:3, stride:2) # with manual_db_joinables  | without update_foreign_keys
+    # Total number of column level sub-schema for codebase_community: 987 (When table_cnts:[3,2,1], window:3, stride:2) # with manual_db_joinables  | without update_foreign_keys
+    # Total number of column level sub-schema for codebase_community: 1203 (When table_cnts:[3,2,1], window:3, stride:2) # with manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for codebase_community: 1055 (When table_cnts:[3,2,1], window:3, stride:2) # without manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for codebase_community: 1026 (When table_cnts:[3,2], window:3, stride:2) # without manual_db_joinables  | with update_foreign_keys
+    # Total number of column level sub-schema for codebase_community: 3012 (When table_cnts:[4,3,2], window:3, stride:2) # without manual_db_joinables  | with update_foreign_keys
+  
+  debit_card_specializing:
+    table_cnt: 5
+    column_cnt: 21
+    avg_col_cnt_per_table: 4.2
+    table_level_ss_table_counts: [5, 4, 3, 2, 1]
+    sliding_window_length: 3
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for debit_card_specializing:
+  
+  european_football_2:
+    table_cnt: 7
+    column_cnt: 199
+    avg_col_cnt_per_table: 28.428
+    table_level_ss_table_counts: [3]
+    sliding_window_length: 3
+    stride: 2
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for european_football_2:
+  
+  financial:
+    table_cnt: 8
+    column_cnt: 55
+    avg_col_cnt_per_table: 6.875
+    table_level_ss_table_counts: [5, 4, 3, 2]
+    sliding_window_length: 3
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for financial:
+  
+  formula_1:
+    table_cnt: 13
+    column_cnt: 94
+    avg_col_cnt_per_table: 7.23
+    table_level_ss_table_counts: [4]
+    sliding_window_length: 3
+    stride: 2
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for formula_1:
+  
+  student_club:
+    table_cnt: 8
+    column_cnt: 48
+    avg_col_cnt_per_table: 6.0
+    table_level_ss_table_counts: [5, 4, 3, 2]
+    sliding_window_length: 3
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for student_club:
+  
+  superhero:
+    table_cnt: 10
+    column_cnt: 31
+    avg_col_cnt_per_table: 3.1
+    table_level_ss_table_counts: [5, 4, 3]
+    sliding_window_length: 3
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for superhero:
+  
+  thrombosis_prediction:
+    table_cnt: 3
+    column_cnt: 64
+    avg_col_cnt_per_table: 21.33
+    table_level_ss_table_counts: [3, 2]
+    sliding_window_length: 3
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for thrombosis_prediction:
+  
+  toxicology:
+    table_cnt: 4
+    column_cnt: 11
+    avg_col_cnt_per_table: 2.75
+    table_level_ss_table_counts: [4, 3, 2, 1]
+    sliding_window_length: 2
+    stride: 1
+    min_column_example_cnt: 200
+    # Total number of column level sub-schema for toxicology:
+
+
+train:
+  address:
+    table_level_ss_table_counts: [3]
+    sliding_window_length: 3
+    stride: 2
+    min_column_example_cnt: 200
+  
+  car_retails:
+    table_level_ss_table_counts: [3]
+    sliding_window_length: 3
+    stride: 2
+    min_column_example_cnt: 200
+  
+  retails:
+    table_level_ss_table_counts: [3]
+    sliding_window_length: 3
+    stride: 2
+    min_column_example_cnt: 200
+
+
+

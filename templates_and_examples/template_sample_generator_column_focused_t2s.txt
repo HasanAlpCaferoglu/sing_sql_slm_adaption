@@ -1,0 +1,131 @@
+### You are an excellent data scientist. You can understand the given database schema and relations between the schema items perfectly.
+### Given database schema, which is a part of larger chema, your task is to generate text-to-sql examples for the given database schema using all of its tables.
+
+### Follow the rules below step by step:
+1. Understand the Schema:
+    - Carefully read the provided database schema. Identify all tables, their columns, and any foreign key relationships between them.
+    - Some foreign keys may be explicitly stated.
+    - Others may be implicit or missing, so you need to infer the missing foreign key relationships by matching column names and data types.
+
+2. Use All Tables 
+    - For examples you generate, ensure that the SQL query uses all tables in the given schema. This includes joining across all tables in a meaningful way based on their relationships.
+
+3. Focus on a Column 
+    - Across all your generated queries, make sure to use {FOCUSED_COLUMN} column along with other columns in the schema. 
+
+4. Generate Question Plans, User Questions and Corresponding SQL Query with Reasoning
+    - **Important Guidelines**
+        - Generated user questions must be semantically meaningful and logically sound.  
+        - Do **not** write questions that are illogical, unrealistic, or that extract meaningless.  
+        - The question must make **sense from a real-world human perspective**: someone should realistically want to ask the question to gain useful information from the database.  
+        - Avoid contrived combinations of fields that don’t naturally belong together or questions that serve no analytical or practical purpose.  
+        - The goal is not only to generate syntactically correct SQL queries but to ensure that each query **serves a clear and reasonable purpose** and the corresponding user question is something that a human might genuinely ask.
+
+    - For each example, follow these steps carefully:
+    
+      **(a) Question Plan (Before Writing the User Question)**  
+      Write a detailed plan that outlines the structure and intention of the question you will generate.  
+      The plan should clearly specify:
+        - The desired outcome or information the user is trying to retrieve.
+        - Which tables and columns are needed and why. Which columns and their values will be used.
+        - What type of operation is required (e.g., filter, join, aggregation, ranking, window function).
+        - Which specific data concepts will be indirectly referred to in the user question.
+        - **Which example values from the schema will be used in the question or SQL filter and how**.
+        - How column names will be paraphrased into natural language that someone unfamiliar with the schema might use (e.g., say “National Center for Educational Statistics school district identification number” instead of “NCESDist”).
+
+      This step ensures the LLM generates semantically meaningful, indirect, and realistic questions that align with real-world user expectations.
+
+      **(b) User Question (Natural Language Formulation)**  
+      Write a natural language question that:
+        - Clearly expresses the user’s intent based on the above plan as the question.
+        - Does not explicitly reference table or column names from the schema.
+        - Replaces abbreviations and short-form column names with understandable, full-form descriptions or phrases that a non-technical user might say.  (e.g., say “school district identifier assigned by the national education statistics agency” instead of “NCESDist”).
+        - Reflects realistic phrasing, including synonyms, paraphrasing, and indirect expressions (e.g., “Which region saw the largest increase...” instead of “MAX(value) GROUP BY region”).
+
+      **Important**: The SQL query generated to answer the question must use all tables in the schema.
+
+      **(c) Chain-of-Thought Reasoning**  
+      Write a step-by-step reasoning describing how the SQL query is derived from the user question:
+        - Analyze the question intent.
+        - Describe which columns and tables are involved and why.
+        - Explain how the tables are joined.
+        - Clarify whether aggregation, filtering, ordering, or ranking is needed.
+        - Justify the use of any SQL features like GROUP BY, HAVING, LIMIT, or window functions.
+        - Ensure proper coverage and justification for every SQL operation used.
+
+      **(d) SQL Query (in SQLite dialect)**  
+      Generate a correct SQL query that:
+        - Uses only the tables provided in the given sub-schema.
+        - Accurately answers the natural language question.
+        - Conforms to all constraints and best practices defined above.
+        
+5. Generate Question-SQL Pairs at Varying Difficulty Levels In The Following Order
+    - Simple: Write {N} number of simple question-SQL pairs involving straightforward joins and filters, basic aggregation
+    - Moderate: Write {N} number of moderate question-SQL pairs requiring more logic, such as subqueries or grouping with conditions
+    - Challenging: Write {N} number of challenging question-SQL pairs including window functions supported by SQLite dialect(like `OVER` clause, `PARTITION BY` clause, `RANK` clause), nested subqueries, multiple aggregations, complex conditions or conditional expression (like `CASE` expression)
+    - Window Functions (Additional Category):  Write {N} question-SQL pairs that explicitly utilize window functions supported by SQLite dialect such as `OVER` clause, `PARTITION BY`, `ORDER BY`, `RANK()`, `ROW_NUMBER()`, `ROWS_BETWEEN`
+
+6. Ensure Diversity in Question-SQL Pairs
+    - Ensure that the generated question-SQL pairs are as diverse as possible in structure, logic, and linguistic style.
+
+7. Use Indirect Language in Some Questions:
+    - Make sure that some user questions use synonyms, reworded expressions, or indirect references to database elements (such as table names, column names, and values).
+    - These questions should avoid directly stating the exact names of tables, columns, or values as defined in the schema.
+    - However, the corresponding SQL queries must use the exact schema elements.
+    - These questions evaluate the model’s ability to understand semantics and generalize beyond exact string matching.
+    
+【Examples】    
+{EXAMPLES}
+
+### Now it is your turn to write column focused question-SQL (text-to-SQL) pairs for a given database schema and given column. 
+### Follow the rules written above strictly.
+### Use aggregations, window functions supported by SQLite dialect, mathematical expressions and other functions in the generated SQL queries, especially in challenging ones, and generate user questions accordingly.
+
+【Table creation statements】
+{SUB_SCHEMA}
+
+【Column Meanings】
+{COLUMN_MEANINGS}
+
+【Column Values】
+{COLUMN_VALUES}
+
+【Focus Column】
+{FOCUSED_COLUMN}
+
+### Ensure that use {FOCUSED_COLUMN} column along with other columns in all of your generated examples
+### Let's think step by step and generate User Question - SQL pairs for the given database schema. After your response, I will check your answer and if you do the task correctly, I will give you 1 million dollars. Only output a json as your response. Remember to use all tables in the schema in each SQL query you generate.
+### Enclose your response within three backticks (```):
+### Ensure that your response is a JSON object structured as follows:
+
+```json{{
+    "text_to_sql_pair_1": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    "text_to_sql_pair_2": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    "text_to_sql_pair_3": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    ...
+    "text_to_sql_pair_4N": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }}
+}}```

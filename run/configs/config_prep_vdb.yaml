@@ -1,0 +1,15 @@
+setting_name: SCHEMALESS
+prep_dir_name: "prep_schemaless" 
+
+data_mode: 'dev' # train, dev or test
+dataset: 'bird' # bird or spider
+db_ids: ['california_schools'] 
+# write specific db_ids 
+# ['california_schools', 'card_games', 'codebase_community', 'debit_card_specializing', 'european_football_2']
+# ['financial', 'formula_1', 'student_club', 'superhero', 'thrombosis_prediction', 'toxicology']
+
+index_method: "IndexHNSWFlat" # could be one of ['IndexHNSWFlat', 'IndexFlatIP']
+model_provider: "google" # could be one of ['google', 'gemini', 'sentence-transformer']
+model_name_or_path: "models/embedding-001"
+batch_size: 10
+

@@ -1,0 +1,47 @@
+{
+    "file_path": "../dataset/bird-sql/dev/dev_with_few_shots_v10_important.json",
+    "config": "vdb",
+    "overall_schema_performance": {
+        "t_num_tp": 150,
+        "t_num_fp": 113,
+        "t_num_fn": 0,
+        "c_num_tp": 422,
+        "c_num_fp": 466,
+        "c_num_fn": 9,
+        "table_precision": 0.5703422053231939,
+        "table_recall": 1.0,
+        "column_precision": 0.4752252252252252,
+        "column_recall": 0.9791183294663574,
+        "column_strict_recall_rate": 0.9101123595505618,
+        "column_recalls": []
+    },
+    "all_few_shot_schema_performance": {
+        "t_num_tp": 150,
+        "t_num_fp": 116,
+        "t_num_fn": 0,
+        "c_num_tp": 406,
+        "c_num_fp": 2817,
+        "c_num_fn": 25,
+        "table_precision": 0.5639097744360902,
+        "table_recall": 1.0,
+        "column_precision": 0.12596959354638534,
+        "column_recall": 0.9419953596287703,
+        "column_strict_recall_rate": 0.7303370786516854,
+        "column_recalls": []
+    },
+    "topk_few_shot_schema_performance": {
+        "top_k": 6,
+        "t_num_tp": 150,
+        "t_num_fp": 103,
+        "t_num_fn": 0,
+        "c_num_tp": 304,
+        "c_num_fp": 748,
+        "c_num_fn": 127,
+        "table_precision": 0.5928853754940712,
+        "table_recall": 1.0,
+        "column_precision": 0.2889733840304182,
+        "column_recall": 0.7053364269141531,
+        "column_strict_recall_rate": 0.24719101123595505,
+        "column_recalls": []
+    }
+}

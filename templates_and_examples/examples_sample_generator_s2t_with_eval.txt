@@ -1,0 +1,382 @@
+### Examples
+
+*** Exampe 1 ***
+Database Schema: 
+CREATE TABLE productlines (
+    productLine  PRIMARY KEY,
+    image,
+    textDescription,
+    htmlDescription
+);
+
+CREATE TABLE products (
+    productCode PRIMARY KEY,
+    productLine,
+    buyPrice,
+    MSRP,
+    productName,
+    FOREIGN KEY (productLine) REFERENCES productlines(productLine)
+);
+
+CREATE TABLE orderdetails (
+    orderNumber,
+    productCode,
+    quantityOrdered,
+    orderLineNumber,
+    priceEach DECIMAL,
+    PRIMARY KEY (orderNumber, productCode),
+    FOREIGN KEY (productCode) REFERENCES products(productCode)
+);
+
+
+Detailed Column Information:
+Table name: `productlines`
+Column name: `productLine`
+Column meaning: The 'product line' column in the 'productlines' table of the 'car_retails' database is a text field representing the unique name of each product line, encompassing categories such as Trucks and Buses, Trains, Vintage Cars, Ships, Planes, Classic Cars, and Motorcycles.
+Table name: `productlines`
+Column name: `textDescription`
+Column meaning: The 'text description' column in the 'productlines' table of the 'car_retails' database is of type 'text' and categorizes products into specific types: 'Trucks and Buses', 'Trains', 'Vintage Cars', 'Ships', 'Planes', 'Classic Cars', and 'Motorcycles'.
+Table name: `productlines`
+Column name: `htmlDescription`
+Column meaning: The 'html description' text column in the 'productlines' table of the 'car_retails' database categorizes products into specific types, including 'Trucks and Buses', 'Trains', 'Vintage Cars', 'Ships', 'Planes', 'Classic Cars', and 'Motorcycles'.
+Table name: `productlines`
+Column name: `image`
+Column meaning: In the 'productlines' table of the 'car_retails' database, the 'image' column stores binary data representing images, using the BLOB data type.
+
+Table name: `products`
+Column name: `productCode`
+Column meaning: In the 'products' table of the 'car_retails' database, the 'product code' column, of type text, stores unique identifiers for products, exemplified by values like 'S50_1392', 'S32_1374', 'S24_4620'.
+Table name: `products`
+Column name: `productLine`
+Column meaning: The 'product line' column in the 'products' table of the 'car_retails' database stores the name of the product line as text, indicating the category of the product. Possible values include 'Trains', 'Vintage Cars', 'Classic Cars', 'Trucks and Buses', 'Ships', 'Planes', and 'Motorcycles'.
+Table name: `products`
+Column name: `buyPrice`
+Column meaning: In the 'products' table of the 'car_retails' database, the 'buy price' column (type: real) records the purchase cost of items from vendors.
+Table name: `products`
+Column name: `MSRP`
+Column meaning: The \"Manufacturer Suggested Retail Price\" column in the \"products\" table of the \"car_retails\" database, of type real, represents the price recommended by the manufacturer for retail sale, indicating the expected profit margin over the buy price.
+Table name: `products`
+Column name: `productName`
+Column meaning: The 'product name' column in the 'products' table of the 'car_retails' database stores text descriptions of vintage vehicles, including models and years.
+
+Table name: `orderdetails`
+Column name: `orderNumber`
+Column meaning: The 'order number' column in the 'orderdetails' table of the 'car_retails' database is an integer that uniquely identifies each order.
+Table name: `orderdetails`
+Column name: `productCode`
+Column meaning: Unique codes identifying products in the 'orderdetails' table of the 'car_retails' database.
+Table name: `orderdetails`
+Column name: `quantityOrdered`
+Column meaning: The 'quantity ordered' column in the 'orderdetails' table of the 'car_retails' database stores the integer value representing the number of items ordered.
+Table name: `orderdetails`
+Column name: `orderLineNumber`
+Column meaning: The 'order Line Number' column in the 'orderdetails' table of the 'car_retails' database stores the sequence of items in an order as integers.
+Table name: `orderdetails`
+Column name: `priceEach`
+Column meaning: In the 'orderdetails' table of the 'car_retails' database, the 'price for each' column, of type real, represents the unit price of an item, which when multiplied by the 'quantityOrdered', gives the total price of that item.
+
+
+{
+  "text_to_sql_pair_1": {
+    "difficulty": "Simple",
+    "SQL": "SELECT productLine, htmlDescription FROM productlines;",
+    "sql_analysis": "1. Column Mapping:\n   - `productLine`: This column represents the name of the product category, like 'Classic Cars' or 'Motorcycles'.\n   - `htmlDescription`: This column contains an HTML-formatted description for each product line.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `productLine`: The schema confirms this is the unique name for each product line category. The query correctly retrieves it.\n   - `htmlDescription`: The schema confirms this column holds HTML content describing the product line. The query correctly selects it.\n\n3. Query Logic and Operations:\n   - The query uses a `SELECT` statement to retrieve data from two columns (`productLine` and `htmlDescription`) in the `productlines` table.\n   - No filtering, joining, or aggregation is performed, meaning it retrieves all records from the specified columns.\n\n4. Goal of the Query:\n   - The purpose is to obtain a complete list of all available product lines along with their corresponding HTML descriptions.\n\n5. Conceptual Mapping to Natural Language:\n   - `productLine` will be referred to as 'product lines'.\n   - `htmlDescription` will be referred to as 'HTML descriptions'.",
+    "question": "List all product lines and their HTML descriptions.",
+    "question_and_sql_logic_analysis": "This is a simple and logical request to fetch catalogue data. An end-user, like a web developer or content manager, would need this information to populate product category pages. The SQL is a direct `SELECT` from the `productlines` table and perfectly matches the question. The pair is valid and realistic.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_2": {
+    "difficulty": "Simple",
+    "SQL": "SELECT T1.orderNumber, T1.quantityOrdered FROM orderdetails AS T1 INNER JOIN products AS T2 ON T1.productCode = T2.productCode WHERE T2.MSRP > 100;",
+    "sql_analysis": "1. Column Mapping:\n   - `orderNumber`: The unique identifier for a customer's order.\n   - `quantityOrdered`: The number of units of a specific product included in an order.\n   - `productCode`: The unique identifier for a product.\n   - `MSRP`: The Manufacturer's Suggested Retail Price for a product.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `MSRP`: The schema defines this as the 'Manufacturer Suggested Retail Price'. The query correctly uses it to filter products with a suggested price over 100.\n   - `quantityOrdered`: This is the number of items ordered, which is correctly retrieved.\n   - `orderNumber`: This is the unique order ID, correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query joins the `orderdetails` and `products` tables on their common `productCode` to link order information with product details.\n   - It then filters these joined records using a `WHERE` clause to keep only those where the product's `MSRP` is greater than 100.\n   - Finally, it selects the `orderNumber` and the `quantityOrdered` for the filtered results.\n\n4. Goal of the Query:\n   - The goal is to identify the order number and the quantity ordered for all line items that involve a product with a manufacturer's suggested retail price exceeding $100.\n\n5. Conceptual Mapping to Natural Language:\n   - `orderNumber` will be called 'order number'.\n   - `quantityOrdered` will be called 'quantity'.\n   - The condition `T2.MSRP > 100` will be phrased as 'manufacturer’s suggested retail price is greater than 100'.",
+    "question": "Find the order number and quantity for each product whose manufacturer’s suggested retail price is greater than 100.",
+    "question_and_sql_logic_analysis": "This is a realistic business query. A sales analyst would ask this to identify orders that include premium products. The SQL correctly joins `orderdetails` with `products` to access the `MSRP` and then filters based on the condition. The requested columns directly address the user's question. The pair is logically coherent.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_3": {
+    "difficulty": "Simple",
+    "SQL": "SELECT T2.productName, T1.htmlDescription, T3.orderNumber, T3.priceEach FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T1.textDescription LIKE '%Cars%';",
+    "sql_analysis": "1. Column Mapping:\n   - `productName`: The specific name of a product, like '1969 Ford Mustang'.\n   - `htmlDescription`: The HTML-formatted description of the product line.\n   - `orderNumber`: The unique identifier for a customer order.\n   - `priceEach`: The price at which one unit of a product was sold in a specific order.\n   - `textDescription`: A plain text description of the product line category.\n   - `productLine`: The name of the product category.\n   - `productCode`: The unique identifier for a product.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `textDescription`: The schema confirms this column contains a text description of the product line. The query correctly uses a `LIKE` operator to filter for lines containing 'Cars'.\n   - `productName`: The name of the product, correctly retrieved.\n   - `htmlDescription`: The HTML description for the product line, correctly retrieved.\n   - `orderNumber`: The unique order ID, correctly retrieved.\n   - `priceEach`: The sale price per unit in an order, correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query performs `INNER JOIN`s across three tables: `productlines`, `products`, and `orderdetails` to link product line descriptions to specific products and their order details.\n   - A `WHERE` clause filters the results to include only products belonging to product lines whose `textDescription` contains the substring 'Cars'.\n   - It selects the product's name, its line's HTML description, the order number, and the price per unit for each matching order item.\n\n4. Goal of the Query:\n   - The goal is to retrieve detailed information for every individual item sold that belongs to any product line related to 'Cars'.\n\n5. Conceptual Mapping to Natural Language:\n   - `productName` is referred to as 'product name'.\n   - `htmlDescription` is referred to as 'product line's HTML description'.\n   - `orderNumber` is referred to as 'order number'.\n   - `priceEach` is referred to as 'price it was sold at'.\n   - The condition `T1.textDescription LIKE '%Cars%'` is phrased as 'from product lines with 'Cars' in their description'.",
+    "question": "For every ordered item from product lines with 'Cars' in their description, show the product name, the product line's HTML description, the order number, and the price it was sold at.",
+    "question_and_sql_logic_analysis": "The query logically connects product lines, products, and order details to answer a specific business question about a product category. A category manager or marketing analyst would ask this to analyze sales of 'Cars'. The use of `LIKE` is appropriate for searching within a text description. The joins are correct, and the selected columns provide a useful summary.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_4": {
+    "difficulty": "Moderate",
+    "SQL": "SELECT T1.textDescription, T2.productName, SUM(T3.quantityOrdered) AS TotalQuantity FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T3.quantityOrdered > 40 GROUP BY T1.textDescription, T2.productName;",
+    "sql_analysis": "1. Column Mapping:\n   - `textDescription`: The plain text description of the product line category.\n   - `productName`: The specific name of a product.\n   - `quantityOrdered`: The number of units of a product in a single order line.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `quantityOrdered`: The schema defines this as the number of items ordered. The query first filters individual order lines where this value is over 40, and then uses it in a `SUM` aggregation.\n   - `textDescription`: The description of the product line, used for grouping.\n   - `productName`: The name of the product, used for grouping.\n\n3. Query Logic and Operations:\n   - The query joins `productlines`, `products`, and `orderdetails` to link product information with order details.\n   - It filters the order line items with a `WHERE` clause, keeping only those where more than 40 units were ordered at once.\n   - It then uses `GROUP BY` to group the remaining rows by product line description and product name.\n   - For each group, it calculates the total quantity ordered using `SUM(T3.quantityOrdered)` and aliases it as `TotalQuantity`.\n\n4. Goal of the Query:\n   - The objective is to calculate the total number of units sold for each product, but only by summing up quantities from large individual orders (more than 40 units per order line).\n\n5. Conceptual Mapping to Natural Language:\n   - `textDescription` is referred to as 'product lines (showing their text description)'.\n   - `productName` is referred to as 'product name'.\n   - `SUM(T3.quantityOrdered)` is called 'total quantity ordered'.\n   - The condition `T3.quantityOrdered > 40` is phrased as 'only include order lines where the quantity ordered was greater than 40'.",
+    "question": "Provide a list of product lines (showing their text description), the corresponding product name, and the total quantity ordered for each product, but only include order lines where the quantity ordered was greater than 40.",
+    "question_and_sql_logic_analysis": "This query answers a valid business question about high-volume sales by identifying which products are frequently ordered in bulk. The SQL correctly filters the individual order lines (`quantityOrdered > 40`) *before* aggregating the quantities. The joins and grouping are correct, making the pair realistic and useful for sales analysis.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_5": {
+    "difficulty": "Moderate",
+    "SQL": "SELECT T1.productName, T3.orderNumber, T3.quantityOrdered FROM products AS T1 INNER JOIN (SELECT productCode FROM orderdetails GROUP BY productCode HAVING SUM(quantityOrdered) > 100) AS HighDemandProducts ON T1.productCode = HighDemandProducts.productCode INNER JOIN orderdetails AS T3 ON T1.productCode = T3.productCode;",
+    "sql_analysis": "1. Column Mapping:\n   - `productName`: The specific name of a product.\n   - `orderNumber`: The unique identifier for a customer order.\n   - `quantityOrdered`: The number of units of a product in a single order line.\n   - `productCode`: The unique identifier for a product.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `quantityOrdered`: The schema confirms this is the quantity for an order line. The query correctly uses it in a `SUM` aggregation within a subquery to identify popular products.\n   - `productCode`: The unique product identifier used to link the main query with the subquery results.\n   - `productName`: The product's name, correctly retrieved.\n   - `orderNumber`: The unique order ID, correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query uses a subquery (aliased as `HighDemandProducts`) to first create a list of popular products. The subquery groups the `orderdetails` by `productCode` and uses a `HAVING` clause to keep only those products whose total `SUM(quantityOrdered)` is greater than 100.\n   - The main query then joins the `products` table with this list of `HighDemandProducts`.\n   - It performs a final join to the `orderdetails` table to retrieve every individual order line associated with these high-demand products.\n   - It selects the product name, order number, and the quantity for each of these individual order lines.\n\n4. Goal of the Query:\n   - The goal is to first identify products that have a high total sales volume (more than 100 units sold in total) and then retrieve a list of every single order that contributed to the sales of those popular products.\n\n5. Conceptual Mapping to Natural Language:\n   - `productName` will be referred to as 'product name'.\n   - `orderNumber` will be called 'order number'.\n   - `quantityOrdered` will be called 'quantity ordered'.\n   - The subquery logic `SUM(quantityOrdered) > 100` will be described as 'products whose total ordered quantity across all orders exceeds 100'.",
+    "question": "List the product name, order number, and quantity ordered for products whose total ordered quantity across all orders exceeds 100.",
+    "question_and_sql_logic_analysis": "This is a logical multi-step analysis. First, it identifies a list of popular products (those with total sales quantity > 100). Second, it retrieves all order details for those popular products. An inventory manager would ask this to review the sales history of their best-selling items. The SQL correctly uses a subquery to implement this two-step logic. The pair is sound.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_6": {
+    "difficulty": "Challenging",
+    "SQL": "WITH ProductRatio AS (SELECT T1.textDescription, T2.productName, T2.productCode, T1.image, (CAST(T2.MSRP AS REAL) / T2.buyPrice) AS PriceRatio, ROW_NUMBER() OVER (PARTITION BY T1.productLine ORDER BY (CAST(T2.MSRP AS REAL) / T2.buyPrice) DESC) as rn FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode WHERE T2.buyPrice > 0 GROUP BY T1.textDescription, T2.productName, T2.productCode, T1.image, T2.MSRP, T2.buyPrice) SELECT textDescription, productName, productCode, image, PriceRatio FROM ProductRatio WHERE rn = 1;",
+    "sql_analysis": "1. Column Mapping:\n   - `textDescription`: The plain text description of the product line.\n   - `productName`: The specific name of a product.\n   - `productCode`: The unique identifier for a product.\n   - `image`: An image associated with the product line.\n   - `MSRP`: The Manufacturer's Suggested Retail Price.\n   - `buyPrice`: The cost to purchase the product from the vendor.\n   - `productLine`: The name of the product category.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `MSRP`: The Manufacturer Suggested Retail Price, a real number.\n   - `buyPrice`: The purchase cost, a real number. The query correctly uses these to calculate a ratio representing potential markup. The `WHERE T2.buyPrice > 0` clause correctly prevents division-by-zero errors.\n   - `image`: Binary image data for the product line, correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query uses a Common Table Expression (CTE) named `ProductRatio`.\n   - Inside the CTE, it joins `productlines`, `products`, and `orderdetails`. The join to `orderdetails` and the subsequent `GROUP BY` ensure only products that have been ordered are considered.\n   - It calculates the ratio of `MSRP` to `buyPrice` for each product, aliased as `PriceRatio`.\n   - It uses the `ROW_NUMBER()` window function. `PARTITION BY T1.productLine` means ranking restarts for each product line. `ORDER BY ... DESC` ranks products with the highest price ratio first.\n   - The main query then selects from the CTE, filtering with `WHERE rn = 1` to get only the top-ranked product from each product line.\n\n4. Goal of the Query:\n   - The goal is to identify the single most profitable product (based on the ratio of suggested retail price to its cost) within each product line from the set of products that have been sold at least once.\n\n5. Conceptual Mapping to Natural Language:\n   - `textDescription` is referred to as 'product line (identified by its text description)'.\n   - `productName` and `productCode` are referred to as 'product (show name and code)'.\n   - The calculation `(CAST(T2.MSRP AS REAL) / T2.buyPrice)` is conceptualized as the 'ratio of manufacturer’s suggested retail price to buy price'.\n   - The `ROW_NUMBER()` and `WHERE rn = 1` logic is described as finding the 'highest ratio'.\n   - `image` is referred to as 'image associated with that product line'.",
+    "question": "For each product line (identified by its text description), find the product (show name and code) that has the highest ratio of manufacturer’s suggested retail price to buy price. Also display the image associated with that product line.",
+    "question_and_sql_logic_analysis": "This is an excellent business question for analyzing profitability. A product manager would want to know which items have the highest potential markup in each category. The SQL correctly uses a CTE and a window function to calculate the price ratio and rank products. While the join to `orderdetails` is slightly inefficient, the `GROUP BY` ensures the result is correct. The overall logic is sound and addresses a sophisticated, real-world analytical need.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_7": {
+    "difficulty": "Window",
+    "SQL": "SELECT T2.productName, T1.textDescription, T3.orderNumber, T3.orderLineNumber, T3.priceEach, (T3.priceEach - AVG(T3.priceEach) OVER (PARTITION BY T1.productLine)) AS PriceDifferenceFromLineAvg FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode;",
+    "sql_analysis": "1. Column Mapping:\n   - `productName`: The specific name of a product.\n   - `textDescription`: The plain text description of the product line category.\n   - `orderNumber`: The unique identifier for a customer order.\n   - `orderLineNumber`: The sequence number of an item within an order.\n   - `priceEach`: The price at which one unit of a product was sold in an order.\n   - `productLine`: The name of the product category.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `priceEach`: The schema defines this as the unit price of an item in an order. The query correctly uses this for both direct display and within an `AVG` window function.\n   - `productLine`: The schema defines this as the product category. The query correctly uses it as the `PARTITION` for the window function, ensuring the average is calculated per product line.\n\n3. Query Logic and Operations:\n   - The query joins the `productlines`, `products`, and `orderdetails` tables to access all necessary data.\n   - It uses the `AVG()` window function. `AVG(T3.priceEach) OVER (PARTITION BY T1.productLine)` calculates the average `priceEach` for all items belonging to the same product line.\n   - It then calculates the difference between each specific item's `priceEach` and its product line's average price, aliasing this result as `PriceDifferenceFromLineAvg`.\n   - It selects several columns of identifying information along with this calculated price difference.\n\n4. Goal of the Query:\n   - The goal is to analyze pricing variation by showing, for each ordered item, how its selling price compares to the average selling price of all other items in the same product line.\n\n5. Conceptual Mapping to Natural Language:\n   - `productName` is 'product name'.\n   - `textDescription` is 'line's text description'.\n   - `orderNumber` and `orderLineNumber` are 'order number' and 'order line number'.\n   - `priceEach` is 'price each item was sold at'.\n   - The window function calculation is paraphrased as 'the difference between the price each item was sold at and the average selling price for all items within the same product line'.",
+    "question": "Display the product name, its line's text description, the order number, the order line number, and calculate the difference between the price each item was sold at and the average selling price for all items within the same product line across all orders.",
+    "question_and_sql_logic_analysis": "This is a sophisticated and highly useful query for pricing analysis. It allows an analyst to see how each individual sale price compares to the average for its product category. The SQL correctly uses a window function (`AVG(...) OVER (PARTITION BY ...)` ) to compute this variance. The question is realistic for a pricing or sales analyst looking for discounts or pricing inconsistencies. The pair is logically sound.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_8": {
+    "difficulty": "Window",
+    "SQL": "SELECT T2.productName, T2.MSRP, T2.buyPrice, T3.orderNumber, RANK() OVER (PARTITION BY T1.productLine ORDER BY T2.MSRP DESC) AS MSRP_Rank_In_Line, T1.htmlDescription FROM productlines AS T1 INNER JOIN products AS T2 ON T1.productLine = T2.productLine INNER JOIN orderdetails AS T3 ON T2.productCode = T3.productCode;",
+    "sql_analysis": "1. Column Mapping:\n   - `productName`: The specific name of a product.\n   - `MSRP`: The Manufacturer's Suggested Retail Price.\n   - `buyPrice`: The cost to acquire the product.\n   - `orderNumber`: The unique identifier for an order.\n   - `productLine`: The name of the product category.\n   - `htmlDescription`: The HTML-formatted description of the product line.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `MSRP`: The Manufacturer Suggested Retail Price. The query correctly uses this as the basis for ranking (`ORDER BY`).\n   - `productLine`: The product category. The query correctly uses this to partition the data, so ranking is done independently for each line (`PARTITION BY`).\n\n3. Query Logic and Operations:\n   - The query joins `productlines`, `products`, and `orderdetails`. The join to `orderdetails` means that a row will be generated for every time a product was ordered.\n   - It uses the `RANK()` window function to assign a rank to each product.\n   - `PARTITION BY T1.productLine` ensures the ranking is performed separately for each product category.\n   - `ORDER BY T2.MSRP DESC` specifies that products with a higher `MSRP` will receive a better (lower) rank.\n   - The query selects product details, the order number, the calculated rank, and the product line's HTML description.\n\n4. Goal of the Query:\n   - For every single ordered item, the goal is to show its price details and determine its rank based on its Manufacturer's Suggested Retail Price relative to all other products within the same product line.\n\n5. Conceptual Mapping to Natural Language:\n   - `productName`, `MSRP`, `buyPrice`, `orderNumber`, and `htmlDescription` are referred to directly or with simple descriptions like 'manufacturer’s suggested retail price'.\n   - The `RANK()` function is conceptualized as 'the rank of each product within its product line based on its manufacturer’s suggested retail price'.",
+    "question": "Show the product name, manufacturer’s suggested retail price, buy price, order number, and the rank of each product within its product line based on its manufacturer’s suggested retail price. Include the product line's HTML description.",
+    "question_and_sql_logic_analysis": "This query ranks products within each product line based on their price point (MSRP) as they appear on orders. This is a valid way to understand the product hierarchy. The question asks for the `orderNumber`, which necessitates the join to `orderdetails`, resulting in a row for each time a product was ordered. The use of the `RANK()` window function is correct. The pair is logically coherent.",
+    "is_logical": true
+  }
+}
+
+
+*** Example 2 ***
+Database Schema: 
+CREATE TABLE part (
+    p_partkey PRIMARY KEY,
+    p_brand,
+    p_container,
+    p_size
+);
+
+CREATE TABLE supplier (
+    s_suppkey PRIMARY KEY,
+    s_nationkey,
+    s_name,
+    s_phone
+);
+
+CREATE TABLE partsupp (
+    ps_partkey,
+    ps_suppkey,
+    ps_comment,
+    ps_availqty,
+    ps_supplycost,
+    PRIMARY KEY (ps_partkey, ps_suppkey), -- Assuming composite primary key
+    FOREIGN KEY (ps_partkey) REFERENCES part(p_partkey),
+    FOREIGN KEY (ps_suppkey) REFERENCES supplier(s_suppkey)
+);
+
+Column Descriptions
+Table name: `part`
+Column name: `p_partkey`
+Column meaning: In the 'retails' database, within the 'part' table, the 'part key' column is an integer that serves as a unique identifier for each part.
+Table name: `part`
+Column name: `p_brand`
+Column meaning: The 'part brand' column in the 'part' table of the 'retails' database stores text information indicating the brand associated with each part, with examples including 'Brand#15', 'Brand#22', and 'Brand#54'.
+Table name: `part`
+Column name: `p_container`
+Column meaning: The 'part container' column in the 'part' table of the 'retails' database stores text descriptions of the types of containers used for parts, with examples including 'SM BOX', 'LG DRUM', and 'JUMBO DRUM'.
+Table name: `part`
+Column name: `p_size`
+Column meaning: In the 'part' table of the 'retails' database, the 'part size' column, an integer, indicates the part's size, with larger numbers representing larger parts.
+
+Table name: `supplier`
+Column name: `s_suppkey`
+Column meaning: The 'supply key' is an integer column in the 'supplier' table of the 'retails' database, serving as a unique identifier for each supply.
+Table name: `supplier`
+Column name: `s_nationkey`
+Column meaning: Integer identifier for the nation of the supplier in the 'supplier' table of the 'retails' database.
+Table name: `supplier`
+Column name: `s_name`
+Column meaning: The 'supplier name' column in the 'supplier' table of the 'retails' database stores the name of the supplier as text, with examples like 'Supplier#000003408', 'Supplier#000000471', and 'Supplier#000006865'.
+Table name: `supplier`
+Column name: `s_phone`
+Column meaning: The 'supplier phone' column in the 'supplier' table of the 'retails' database stores the supplier's phone number as text, with examples like '790-342-8243'.
+
+Table name: `partsupp`
+Column name: `ps_partkey`
+Column meaning: Unique identifier for each part in the 'partsupp' table of the 'retails' database.
+Table name: `partsupp`
+Column name: `ps_suppkey`
+Column meaning: Unique integer ID for identifying supply keys in the partsupp table of the retails database.
+Table name: `partsupp`
+Column name: `ps_comment`
+Column meaning: The \"part supply comment\" column in the \"partsupp\" table of the \"retails\" database stores textual descriptions related to the supply of parts, with examples including comments on supply conditions or characteristics.
+Table name: `partsupp`
+Column name: `ps_availqty`
+Column meaning: In the 'retails' database, within the 'partsupp' table, the 'part supply available quantity' column (integer type) indicates the current stock level of parts. Values under 10 suggest a stock nearing depletion.
+Table name: `partsupp`
+Column name: `ps_supplycost`
+Column meaning: The 'part supply cost' column in the 'partsupp' table of the 'retails' database, of type real, represents the cost of supplying a part. It is used to calculate profit in the formula: profit = (l_extendedprice * (1 - l_discount)) - (ps_supplycost * l_quantity), where 'l_quantity' is sourced from the 'lineitem' table.
+
+
+{
+  "text_to_sql_pair_1": {
+    "difficulty": "Simple",
+    "SQL": "SELECT DISTINCT p_container FROM part;",
+    "sql_analysis": "1. Column Mapping:\n   - `p_container`: This column describes the type of container a part is packaged in, such as 'SM BOX' or 'LG DRUM'.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_container`: The schema confirms this column stores text descriptions of container types. The query correctly uses `SELECT DISTINCT` to get a unique list of these types.\n\n3. Query Logic and Operations:\n   - The query uses a `SELECT DISTINCT` statement on the `part` table.\n   - This operation retrieves all unique values from the `p_container` column, ensuring that each container type appears only once in the result.\n\n4. Goal of the Query:\n   - The purpose is to get a complete and unique list of all the different types of containers used for parts in the database.\n\n5. Conceptual Mapping to Natural Language:\n   - `p_container` will be paraphrased as 'part container types'.",
+    "question": "List all unique part container types used in the database.",
+    "question_and_sql_logic_analysis": "The query directly answers the question by fetching unique container types. This is a logical and common request for understanding the range of product packaging available in the inventory system. An analyst would use this to get a basic categorical overview of the `part` table to inform further analysis or reporting on packaging logistics.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_2": {
+    "difficulty": "Simple",
+    "SQL": "SELECT T3.s_name, T1.p_brand, T2.ps_availqty FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_size = 50;",
+    "sql_analysis": "1. Column Mapping:\n   - `s_name`: The name of the supplier, e.g., 'Supplier#000003408'.\n   - `p_brand`: The brand of the part, e.g., 'Brand#15'.\n   - `ps_availqty`: The available stock level for a part from a specific supplier.\n   - `p_size`: The size of the part.\n   - `p_partkey`/`ps_partkey`: The unique identifier for a part.\n   - `s_suppkey`/`ps_suppkey`: The unique identifier for a supplier.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_size`: The schema confirms this is an integer representing the part's size. The query correctly uses it in a `WHERE` clause to filter for a specific size.\n   - `s_name`: The supplier's name, which is correctly retrieved.\n   - `p_brand`: The part's brand, which is correctly retrieved.\n   - `ps_availqty`: The current stock level, which is correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query performs `INNER JOIN`s across three tables (`part`, `partsupp`, `supplier`) to link part details with supplier information and stock levels.\n   - A `WHERE` clause filters these results to only include records where the part's size (`p_size`) is exactly 50.\n   - It then selects the supplier's name, the part's brand, and the available quantity for these filtered records.\n\n4. Goal of the Query:\n   - The goal is to find out which suppliers provide parts of size 50, what brand those parts are, and how many of each are currently in stock.\n\n5. Conceptual Mapping to Natural Language:\n   - `s_name` is referred to as 'supplier names'.\n   - `p_brand` is referred to as 'the brand of parts'.\n   - `ps_availqty` is paraphrased as 'current stock level' or 'available quantity'.\n   - The condition `T1.p_size = 50` is phrased as 'for all parts with a size dimension of exactly 50'.",
+    "question": "Show the supplier names, the brand of parts they offer, and the current stock level (available quantity) for all parts with a size dimension of exactly 50.",
+    "question_and_sql_logic_analysis": "The query logically joins three tables to connect supplier information with part details, filtered by a specific size. This reflects a realistic user intent, as an inventory or procurement manager would often need to find sourcing options for parts with specific attributes like size. The request is coherent and provides actionable information for managing the supply chain.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_3": {
+    "difficulty": "Moderate",
+    "SQL": "SELECT ps_partkey, AVG(ps_availqty) AS avg_qty FROM partsupp GROUP BY ps_partkey;",
+    "sql_analysis": "1. Column Mapping:\n   - `ps_partkey`: The unique identifier for a part.\n   - `ps_availqty`: The quantity of a part available from a specific supplier.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `ps_partkey`: The unique part identifier, correctly used as the grouping key.\n   - `ps_availqty`: The available stock level. The query correctly uses this in an `AVG` aggregation to calculate the average stock across all suppliers for a given part.\n\n3. Query Logic and Operations:\n   - The query operates on the `partsupp` table, which links parts to their various suppliers.\n   - It uses `GROUP BY ps_partkey` to collect all records for the same part together.\n   - For each group (i.e., for each unique part), it calculates the average of the `ps_availqty` column using the `AVG()` aggregate function.\n\n4. Goal of the Query:\n   - The goal is to determine the average stock level for each individual part across all of the suppliers that provide it.\n\n5. Conceptual Mapping to Natural Language:\n   - `ps_partkey` will be referred to as 'each part'.\n   - `AVG(ps_availqty)` will be described as the 'average available quantity'.",
+    "question": "Get the average available quantity for each part.",
+    "question_and_sql_logic_analysis": "The query correctly computes the average available quantity per part by grouping the `partsupp` table. This is a very logical question for inventory management, as it helps identify the typical stock level for a part across all its suppliers, smoothing out individual supplier variations. It provides a useful baseline for availability and for setting reorder points.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_4": {
+    "difficulty": "Moderate",
+    "SQL": "SELECT T3.s_nationkey, AVG(T2.ps_supplycost) AS avg_cost_sm_box FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_container = 'SM BOX' GROUP BY T3.s_nationkey;",
+    "sql_analysis": "1. Column Mapping:\n   - `s_nationkey`: The identifier for the supplier's nation.\n   - `ps_supplycost`: The cost of a part from a specific supplier.\n   - `p_container`: The type of container the part is packaged in.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_container`: The schema confirms this is the part's container type. The query correctly uses it to filter for parts in a 'SM BOX'.\n   - `ps_supplycost`: The schema confirms this is the supply cost. The query correctly uses this with the `AVG` function to calculate an average cost.\n   - `s_nationkey`: The supplier's nation ID, correctly used as the grouping key.\n\n3. Query Logic and Operations:\n   - The query joins the `part`, `partsupp`, and `supplier` tables to connect part container information with supply costs and supplier locations.\n   - It filters the results using a `WHERE` clause to include only parts that are packaged in a 'SM BOX'.\n   - It then groups these filtered records by the supplier's nation (`s_nationkey`).\n   - For each nation, it calculates the `AVG(ps_supplycost)` to find the average supply cost for these specific parts.\n\n4. Goal of the Query:\n   - The objective is to analyze the average supply cost for a specific category of parts (those in 'SM BOX' containers) and break down this average by the national origin of the suppliers.\n\n5. Conceptual Mapping to Natural Language:\n   - `s_nationkey` is referred to as 'supplier's nation key'.\n   - `AVG(T2.ps_supplycost)` is paraphrased as 'average cost'.\n   - The condition `T1.p_container = 'SM BOX'` is described as 'for parts packaged in 'SM BOX' containers'.",
+    "question": "What is the average cost charged by suppliers for parts packaged in 'SM BOX' containers, grouped by the supplier's nation key?",
+    "question_and_sql_logic_analysis": "This is a logical and insightful business question. It seeks to understand the geographic cost variations for a specific category of parts. A supply chain analyst would ask this to identify lower-cost sourcing regions for strategic decision-making. The SQL correctly joins the tables, filters by container type, and then groups by nation to calculate the average cost, perfectly matching the user's intent.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_5": {
+    "difficulty": "Moderate",
+    "SQL": "SELECT T3.s_phone, T2.ps_comment FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey WHERE T1.p_brand = 'Brand#45';",
+    "sql_analysis": "1. Column Mapping:\n   - `s_phone`: The contact phone number of a supplier.\n   - `ps_comment`: A textual comment related to a specific part-supplier relationship.\n   - `p_brand`: The brand name of a part.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_brand`: The schema confirms this is the part's brand. The query correctly uses it in a `WHERE` clause to filter for a specific brand, 'Brand#45'.\n   - `s_phone`: The supplier's phone number, correctly retrieved.\n   - `ps_comment`: The comment associated with the part supply record, correctly retrieved.\n\n3. Query Logic and Operations:\n   - The query joins the `part`, `partsupp`, and `supplier` tables to link part brand information to specific supplier details.\n   - A `WHERE` clause filters the joined records to only include those where the part's brand is 'Brand#45'.\n   - It then selects the supplier's phone number and the corresponding part-supply comment for each matching record.\n\n4. Goal of the Query:\n   - The goal is to retrieve the phone numbers of all suppliers who provide parts from 'Brand#45', and to see any specific comments associated with each of those supply arrangements.\n\n5. Conceptual Mapping to Natural Language:\n   - `s_phone` will be referred to as 'contact phone numbers'.\n   - `ps_comment` will be referred to as 'comments associated with those specific part supply records'.\n   - The condition `T1.p_brand = 'Brand#45'` will be phrased as 'suppliers providing parts of 'Brand#45''.",
+    "question": "List the contact phone numbers for suppliers providing parts of 'Brand#45', along with any comments associated with those specific part supply records.",
+    "question_and_sql_logic_analysis": "This query serves a clear operational purpose. When dealing with a specific brand, a user would logically need to retrieve supplier contact information and any relevant notes about the supply arrangement. The SQL correctly filters for the brand and joins the necessary tables to pull the phone number and comments. The request is realistic and useful for supplier relationship management.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_6": {
+    "difficulty": "Challenging",
+    "SQL": "SELECT T3.s_name, T3.s_nationkey FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey GROUP BY T3.s_suppkey, T3.s_name, T3.s_nationkey HAVING AVG(T2.ps_supplycost) < (SELECT AVG(ps_supplycost) FROM partsupp);",
+    "sql_analysis": "1. Column Mapping:\n   - `s_name`: The name of the supplier.\n   - `s_nationkey`: The identifier for the supplier's nation.\n   - `ps_supplycost`: The cost of a part from a specific supplier.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `ps_supplycost`: The schema confirms this is the supply cost. The query correctly uses this to calculate two averages: one per supplier in the `HAVING` clause, and a global average in the subquery for comparison.\n\n3. Query Logic and Operations:\n   - The query first joins the three tables to link suppliers to their supply costs.\n   - It then groups the results by supplier (`s_suppkey`, `s_name`, `s_nationkey`) to analyze each supplier individually.\n   - The `HAVING` clause is used to filter these supplier groups. It calculates the average supply cost for each supplier (`AVG(T2.ps_supplycost)`).\n   - A subquery `(SELECT AVG(ps_supplycost) FROM partsupp)` calculates the single overall average supply cost across all records in the database.\n   - The `HAVING` clause keeps only those suppliers whose personal average cost is less than the global average cost.\n\n4. Goal of the Query:\n   - The goal is to perform a cost analysis to identify 'low-cost' suppliers. It finds all suppliers whose average pricing across all parts they offer is cheaper than the overall market average.\n\n5. Conceptual Mapping to Natural Language:\n   - `s_name` and `s_nationkey` are 'supplier's name' and 'their nation key'.\n   - The expression `AVG(T2.ps_supplycost)` within the `HAVING` clause is 'supplier's average supply cost'.\n   - The subquery `(SELECT AVG(ps_supplycost) FROM partsupp)` is the 'global average supply cost'.\n   - The comparison is described as identifying suppliers 'whose average supply cost... is below the global average'.",
+    "question": "Identify suppliers whose average supply cost across all the different parts they supply is below the global average supply cost calculated across all part supply records. Show the supplier's name and their nation key.",
+    "question_and_sql_logic_analysis": "The question seeks to identify cost-efficient suppliers by comparing their average supply cost to the overall market average. This is a sound and logical analysis for procurement and strategic sourcing. The SQL query correctly implements this logic using a `GROUP BY` on the supplier and a `HAVING` clause with a subquery to compute the global average for comparison. The pair is highly relevant and demonstrates a common analytical pattern for identifying value.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_7": {
+    "difficulty": "Challenging",
+    "SQL": "SELECT T1.s_name, COUNT(DISTINCT T2.ps_partkey) AS num_parts FROM supplier AS T1 INNER JOIN partsupp AS T2 ON T1.s_suppkey = T2.ps_suppkey WHERE T1.s_name LIKE '%Inc%' GROUP BY T1.s_suppkey, T1.s_name HAVING COUNT(DISTINCT T2.ps_partkey) > 3;",
+    "sql_analysis": "1. Column Mapping:\n   - `s_name`: The name of the supplier.\n   - `ps_partkey`: The unique identifier for a part.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `s_name`: The supplier's name. The query correctly uses `LIKE '%Inc%'` to filter for names containing 'Inc'.\n   - `ps_partkey`: The unique part ID. The query correctly uses `COUNT(DISTINCT ...)` to count the number of unique parts a supplier provides, which is the correct logic for the question.\n\n3. Query Logic and Operations:\n   - The query joins `supplier` and `partsupp` to link suppliers to the parts they supply.\n   - It filters suppliers using a `WHERE` clause to find those whose name contains 'Inc'.\n   - It then groups the results by supplier (`s_suppkey`, `s_name`).\n   - The `HAVING` clause is used to filter these groups, keeping only those suppliers who provide more than 3 distinct parts, as calculated by `COUNT(DISTINCT T2.ps_partkey)`.\n\n4. Goal of the Query:\n   - The goal is to find suppliers that meet two specific criteria: their business name suggests they are incorporated (contains 'Inc'), and they have a varied product offering (supplying more than three different kinds of parts).\n\n5. Conceptual Mapping to Natural Language:\n   - `s_name` is referred to as 'suppliers whose names'.\n   - `COUNT(DISTINCT T2.ps_partkey)` is described as the count of 'different parts' they supply.\n   - The `WHERE` clause is described as 'contain the word 'Inc''.\n   - The `HAVING` clause is described as 'who supply more than 3 different parts'.",
+    "question": "Identify suppliers whose names contain the word 'Inc' and who supply more than 3 different parts.",
+    "question_and_sql_logic_analysis": "This is a logical query for segmenting suppliers. A user might hypothesize that incorporated companies ('Inc') are larger or more established, and then filter for those who supply a minimum number of distinct parts to focus on more significant partners. The SQL logic correctly filters by name, groups by supplier, and then uses a `HAVING` clause to filter based on the diversity of parts supplied. It's a realistic use case for supplier analysis.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_8": {
+    "difficulty": "Challenging",
+    "SQL": "SELECT p_brand, MAX(p_size) AS max_size, COUNT(DISTINCT p_container) AS container_count FROM part GROUP BY p_brand;",
+    "sql_analysis": "1. Column Mapping:\n   - `p_brand`: The brand name of a part.\n   - `p_size`: The size of a part.\n   - `p_container`: The type of container a part is packaged in.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_brand`: The part brand, correctly used as the grouping key.\n   - `p_size`: The part size. The query correctly uses the `MAX()` function to find the largest size within each brand.\n   - `p_container`: The part container type. The query correctly uses `COUNT(DISTINCT ...)` to find the number of unique container types for each brand.\n\n3. Query Logic and Operations:\n   - The query operates on the `part` table.\n   - It uses `GROUP BY p_brand` to collect all parts of the same brand into groups.\n   - For each brand group, it applies two aggregate functions:\n     - `MAX(p_size)` to find the largest part size offered by that brand.\n     - `COUNT(DISTINCT p_container)` to count how many unique container types are used by that brand.\n\n4. Goal of the Query:\n   - The goal is to summarize the product catalog at the brand level, showing the physical range (maximum size) and packaging variety (number of container types) for each brand.\n\n5. Conceptual Mapping to Natural Language:\n   - `p_brand` is referred to as 'each brand'.\n   - `MAX(p_size)` is described as the 'maximum part size'.\n   - `COUNT(DISTINCT p_container)` is described as 'the number of different containers used'.",
+    "question": "For each brand, return the maximum part size and the number of different containers used for that brand.",
+    "question_and_sql_logic_analysis": "This query provides a concise summary of the product portfolio for each brand. Understanding the maximum size and packaging variety (`container_count`) per brand is a logical request for product management and marketing analysis. It helps to characterize each brand's offerings. The SQL uses appropriate aggregate functions (`MAX`, `COUNT(DISTINCT)`) with a `GROUP BY` clause, directly and efficiently answering the question. The pair is very logical.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_9": {
+    "difficulty": "Window",
+    "SQL": "SELECT T1.p_brand, T1.p_size, T3.s_name, T2.ps_availqty, RANK() OVER (PARTITION BY T1.p_partkey ORDER BY T2.ps_availqty DESC) AS rank_in_part FROM part AS T1 INNER JOIN partsupp AS T2 ON T1.p_partkey = T2.ps_partkey INNER JOIN supplier AS T3 ON T2.ps_suppkey = T3.s_suppkey;",
+    "sql_analysis": "1. Column Mapping:\n   - `p_brand`: The brand of the part.\n   - `p_size`: The size of the part.\n   - `s_name`: The name of the supplier.\n   - `ps_availqty`: The available quantity of a part from a supplier.\n   - `p_partkey`: The unique identifier for a part.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `p_partkey`: The unique part identifier. The query correctly uses this to define the partitions for the `RANK` function, meaning ranking is done separately for each part.\n   - `ps_availqty`: The available stock level. The query correctly uses this in the `ORDER BY` clause of the window function to rank suppliers with more stock higher.\n\n3. Query Logic and Operations:\n   - The query joins `part`, `partsupp`, and `supplier` to bring together part details, supplier names, and stock levels.\n   - It uses the `RANK()` window function to assign a rank to each supplier for a given part.\n   - `PARTITION BY T1.p_partkey` ensures that the ranking is reset for each unique part.\n   - `ORDER BY T2.ps_availqty DESC` sorts the suppliers for each part by their available quantity in descending order, so the supplier with the most stock gets rank 1.\n\n4. Goal of the Query:\n   - The goal is to create a ranked list of suppliers for each part, where the ranking is based on who has the most units of that part available in stock. This helps in identifying the primary or most well-stocked supplier for any given part.\n\n5. Conceptual Mapping to Natural Language:\n   - `p_brand`, `p_size`, `s_name`, `ps_availqty` are referred to as 'brand', 'size', 'supplier name', and 'available quantity'.\n   - The `RANK()` function is conceptualized as 'their rank among suppliers for that part based on available quantity'.",
+    "question": "For each part, list its brand, size, the supplier name, their available quantity, and their rank among suppliers for that part based on available quantity.",
+    "question_and_sql_logic_analysis": "The question is highly practical for procurement and inventory management. When reordering a part, it's essential to know which supplier has the most stock. The SQL query uses a window function (`RANK()`) to solve this problem elegantly and efficiently. Partitioning by part ensures the ranking is done independently for each item. This is a realistic and powerful analytical query that a data analyst would frequently use.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_10": {
+    "difficulty": "Window",
+    "SQL": "SELECT T1.s_name, COUNT(*) AS total_parts, RANK() OVER (ORDER BY COUNT(*) DESC) AS supplier_rank FROM supplier AS T1 INNER JOIN partsupp AS T2 ON T1.s_suppkey = T2.ps_suppkey GROUP BY T1.s_suppkey, T1.s_name;",
+    "sql_analysis": "1. Column Mapping:\n   - `s_name`: The name of the supplier.\n   - `s_suppkey`: The unique identifier for a supplier.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `COUNT(*)`: This correctly counts the number of part-supply records for each supplier after grouping.\n   - `RANK()`: The query uses `RANK()` as a window function after the aggregation is complete. This is a valid use to rank the results of the `GROUP BY` clause.\n\n3. Query Logic and Operations:\n   - The query first joins `supplier` and `partsupp`.\n   - It then uses `GROUP BY T1.s_suppkey, T1.s_name` to aggregate the data for each supplier. In this step, `COUNT(*)` calculates the total number of part records associated with each supplier.\n   - After the aggregation, the `RANK()` window function is applied to the grouped results. `ORDER BY COUNT(*) DESC` ranks the suppliers based on their part count, from most to least.\n\n4. Goal of the Query:\n   - The objective is to first count how many different supply entries (part types) each supplier has and then to create a ranked list of all suppliers based on this count, identifying which suppliers offer the widest range of parts.\n\n5. Conceptual Mapping to Natural Language:\n   - `s_name` is referred to as 'supplier name'.\n   - `COUNT(*)` is described as 'the total number of parts they supply'.\n   - The `RANK()` function is described as 'their rank among all suppliers based on that count'.",
+    "question": "For each supplier, show their name, the total number of parts they supply, and their rank among all suppliers based on that count.",
+    "question_and_sql_logic_analysis": "This query provides a high-level ranking of suppliers based on the volume of their part relationships. A business would use this to identify its most integrated or important suppliers. The use of a window function (`RANK()`) after a `GROUP BY` is a common and powerful pattern for creating ranked lists. The question is logical, and the SQL correctly implements the logic to determine a supplier's overall importance based on the breadth of their catalog.",
+    "is_logical": true
+  }
+}
+
+*** Example 3 ***
+Database Schema: 
+CREATE TABLE payments (
+    payment_id INTEGER PRIMARY KEY,
+    user_id INTEGER,  
+    amount REAL,
+    payment_date DATE
+    FOREIGN KEY (user_id) REFERENCES users(s_suppkey)
+);
+
+CREATE TABLE logins (
+    login_id INTEGER PRIMARY KEY,
+    u_id INTEGER, 
+    login_time DATETIME,
+    ip_address TEXT
+    FOREIGN KEY (u_id) REFERENCES users(s_suppkey)
+);
+
+Colum Descriptions
+Table name: `payments`
+Column name: `payment_id`
+Column meaning: The payment_id column in the payments table serves as a unique integer identifier for each payment transaction made by users in the system.
+Table name: `payments`
+Column name: `user_id`
+Column meaning: The user_id column in the payments table of the application database refers to the integer ID of the user who made the payment. It acts as a foreign key referencing the users table.
+Table name: `payments`
+Column name: `amount`
+Column meaning: The amount column in the payments table represents the monetary value of the transaction as a real number, indicating how much the user paid.
+Table name: `payments`
+Column name: `payment_date`
+Column meaning: The payment_date column in the payments table captures the date (in YYYY-MM-DD format) on which the payment was processed.
+
+
+Table name: `logins`
+Column name: `login_id`
+Column meaning: The login_id column in the logins table is a unique integer that identifies each login event in the system.
+Table name: `logins`
+Column name: `u_id`
+Column meaning: The u_id column in the logins table is an integer that refers to the ID of the user who logged in, serving as a foreign key to the users table.
+Table name: `logins`
+Column name: `login_time`
+Column meaning: The login_time column in the logins table records the precise date and time of each login attempt in the format YYYY-MM-DD HH:MM:SS.
+Table name: `logins`
+Column name: `ip_address`
+Column meaning: The ip_address column in the logins table stores the IP address (as a text value) from which the user logged into the system, used for logging and security monitoring.
+
+
+
+{
+  "text_to_sql_pair_1": {
+    "difficulty": "simple",
+    "SQL": "SELECT l.login_time, p.amount FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+    "sql_analysis": "1. Column Mapping:\n   - `login_time`: This column represents the exact date and time a user logged into the system.\n   - `amount`: This is the monetary value of a payment made by a user.\n   - `u_id`/`user_id`: These columns represent the unique identifier for a user, linking logins and payments.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `login_time`: The schema confirms this is the precise date and time of a login event. It is correctly retrieved.\n   - `amount`: The schema confirms this is the monetary value of a transaction. It is correctly retrieved.\n   - The join condition `l.u_id = p.user_id` correctly links a user's login events with their payment events.\n\n3. Query Logic and Operations:\n   - The query performs an `INNER JOIN` between the `payments` table (aliased as `p`) and the `logins` table (aliased as `l`).\n   - The join is made on the user identifier (`u_id` and `user_id`) to correlate records belonging to the same user.\n   - It selects the `login_time` from the `logins` table and the `amount` from the `payments` table for each matched pair of records.\n\n4. Goal of the Query:\n   - The purpose is to create a combined list showing every login event for a user alongside every payment that same user has made. This results in a Cartesian product of logins and payments for each user.\n\n5. Conceptual Mapping to Natural Language:\n   - `login_time` will be referred to as 'login times'.\n   - `amount` will be referred to as 'payment amounts'.\n   - The `INNER JOIN` on the user ID will be described as 'made by the same user'.",
+    "question": "List all login times along with payment amounts made by the same user.",
+    "question_and_sql_logic_analysis": "The query's logic is flawed because it creates a Cartesian product of a user's logins and their payments. It incorrectly associates every login a user has ever made with every payment they have ever made, regardless of the timing. For example, a login from 2021 would be paired with a payment from 2024, which is a meaningless correlation. A real-world analyst would not ask this as the result is highly misleading.",
+    "is_logical": false
+  },
+  "text_to_sql_pair_2": {
+    "difficulty": "moderate",
+    "SQL": "SELECT DISTINCT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE DATE(l.login_time) = p.payment_date;",
+    "sql_analysis": "1. Column Mapping:\n   - `u_id`/`user_id`: The unique identifier for a user.\n   - `login_time`: The precise date and time of a user's login.\n   - `payment_date`: The date on which a user's payment was made.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `login_time`: The schema defines this as a `DATETIME` value. The `DATE()` function is correctly used to extract only the date portion for comparison.\n   - `payment_date`: The schema defines this as a `DATE` value. The comparison with the extracted date from `login_time` is semantically correct for finding same-day events.\n   - `u_id`: The user's unique ID, correctly selected with `DISTINCT` to avoid duplicates.\n\n3. Query Logic and Operations:\n   - The query joins the `logins` and `payments` tables on the user ID to link activities from the same user.\n   - A `WHERE` clause filters these joined records. It uses the `DATE()` function to extract the calendar date from the `login_time` and compares it to the `payment_date`.\n   - This filter ensures that only records where a login and a payment occurred on the exact same day are kept.\n   - `SELECT DISTINCT` is used to get a unique list of user IDs who meet this condition.\n\n4. Goal of the Query:\n   - The goal is to identify users who are actively engaging with the system on the same day they make a payment, by finding all users who have at least one login record and one payment record on the same calendar date.\n\n5. Conceptual Mapping to Natural Language:\n   - `l.u_id` is paraphrased as 'which users'.\n   - The join and the `WHERE` clause condition `DATE(l.login_time) = p.payment_date` are collectively described as 'made payments and logged in on the same day'.",
+    "question": "Which users have made payments and logged in on the same day?",
+    "question_and_sql_logic_analysis": "This is a logically sound and realistic question. An analyst would reasonably want to identify users who log in and make a payment on the same day, as this cohort represents highly engaged users. The SQL query correctly implements this by joining the tables on the user ID and then filtering where the date of the login matches the date of the payment. Using `DISTINCT` correctly returns a clean list of unique user IDs.",
+    "is_logical": true
+  },
+  "text_to_sql_pair_3": {
+    "difficulty": "window",
+    "SQL": "SELECT l.login_id, l.login_time, RANK() OVER (PARTITION BY l.u_id ORDER BY l.login_time) AS login_rank FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+    "sql_analysis": "1. Column Mapping:\n   - `u_id`/`user_id`: The unique identifier for a user.\n   - `amount`: The monetary value of a payment.\n   - `login_time`: The precise date and time of a login.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `amount`: The schema confirms this is the transaction amount. The query correctly uses it to filter for payments `> 500`.\n   - `login_time`: The schema confirms this is the login timestamp. The query correctly uses it with `ORDER BY ... ASC` to sort events chronologically from earliest to latest.\n\n3. Query Logic and Operations:\n   - The query first joins the `logins` and `payments` tables by user ID.\n   - It applies a `WHERE` clause to filter this joined set, keeping only records associated with a payment amount greater than 500.\n   - The resulting list of login/payment pairs is then sorted by `login_time` in ascending order, which puts the earliest login event first.\n   - `LIMIT 1` is used to select only the top row from the sorted list.\n   - Finally, it selects the user ID (`u_id`) from that single record.\n\n4. Goal of the Query:\n   - The goal is to identify a specific user: the one who had the earliest login time out of the entire group of users who have ever made a high-value payment (over 500).\n\n5. Conceptual Mapping to Natural Language:\n   - `l.u_id` is paraphrased as 'which user'.\n   - The `WHERE p.amount > 500` clause is described as 'those who made a payment exceeding 500'.\n   - The combination of `ORDER BY l.login_time ASC` and `LIMIT 1` is described as 'the first to log in'.",
+    "question": "For each user who made a payment, show their login times and how each login ranks chronologically among that user’s logins.",
+    "question_and_sql_logic_analysis": "The query's logic is flawed. The `INNER JOIN` between `logins` and `payments` creates a Cartesian product, meaning each login record is duplicated for every payment the user has made. Applying the `RANK()` function to this duplicated dataset is incorrect and inefficient, producing a misleading result where the same login can appear multiple times with the same rank. A logical query would first identify users who paid and then rank their logins without creating duplicate records.",
+    "is_logical": false
+  },
+  "text_to_sql_pair_4": {
+    "difficulty": "challenging",
+    "SQL": "SELECT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE p.amount > 500 ORDER BY l.login_time ASC LIMIT 1;",
+    "sql_analysis": "1. Column Mapping:\n   - `login_id`: The unique identifier for a login event.\n   - `login_time`: The date and time of the login.\n   - `u_id`/`user_id`: The unique identifier for a user.\n\n2. CRITICAL SEMANTIC VALIDATION:\n   - `u_id`: The user identifier. The query correctly uses this in the `PARTITION BY` clause, ensuring that the ranking is performed independently for each user.\n   - `login_time`: The login timestamp. The query correctly uses this in the `ORDER BY` clause to establish the chronological order for ranking.\n\n3. Query Logic and Operations:\n   - The query first performs an `INNER JOIN` between `payments` and `logins`. The primary purpose of this join is to filter the `logins` table, keeping only login records for users who have made at least one payment.\n   - It then uses the `RANK()` window function on this filtered set of logins.\n   - `PARTITION BY l.u_id` divides the data into groups, one for each user.\n   - `ORDER BY l.login_time` sorts the logins within each user's group chronologically.\n   - `RANK()` then assigns a rank to each login based on this order.\n\n4. Goal of the Query:\n   - The purpose is to create a sequential record of every login for users who have made a payment. For each of these users, the query ranks their login sessions from earliest to most recent.\n\n5. Conceptual Mapping to Natural Language:\n   - The `INNER JOIN` is described as 'For each user who made a payment'.\n   - `l.login_id` and `l.login_time` are referred to as 'their login ID' and 'their login times'.\n   - The `RANK()` function is conceptualized as 'how each login ranks chronologically among that user’s logins'.",
+    "question": "Which user was the first to log in among those who made a payment exceeding 500?",
+    "question_and_sql_logic_analysis": "This is a logical and well-defined question. An analyst might ask this to identify the very first user who exhibited high-value behavior, perhaps for a cohort analysis or to understand early customer profiles. The SQL query correctly filters for payments over 500, gets all associated logins for those users, orders these login events chronologically, and selects the user from the top record. The logic is sound and serves a clear analytical purpose.",
+    "is_logical": true
+  }
+}

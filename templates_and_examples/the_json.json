@@ -1,0 +1,38 @@
+{
+    "example_1": {
+        "question": "How many papers has each author published?",
+        "chain_of_thought_reasoning": "To determine the number of papers published by each author, we need to count the occurrences of each AuthorId in the PaperAuthor table and group by AuthorId. We then join with the Author table to retrieve the author names.",
+        "SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(PA.PaperId) AS TotalPapers FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId GROUP BY A.Id;",
+        "difficulty": "simple"
+    },
+    "example_2": {
+        "question": "Which year had the most published papers?",
+        "chain_of_thought_reasoning": "To find the year with the most published papers, we count the number of Paper IDs grouped by Year and order them in descending order to select the top result.",
+        "SQL": "SELECT P.Year, COUNT(P.Id) AS TotalPapers FROM Paper P GROUP BY P.Year ORDER BY TotalPapers DESC LIMIT 1;",
+        "difficulty": "simple"
+    },
+    "example_3": {
+        "question": "Which author has published the most papers in conferences?",
+        "chain_of_thought_reasoning": "To identify the author with the most conference papers, we count the number of Paper IDs where ConferenceId is not NULL in the Paper table, join with the PaperAuthor table to associate papers with authors, and order by count.",
+        "SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(P.Id) AS ConferencePapers FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id WHERE P.ConferenceId IS NOT NULL GROUP BY A.Id ORDER BY ConferencePapers DESC LIMIT 1;",
+        "difficulty": "moderate"
+    },
+    "example_4": {
+        "question": "For each author, what is the average number of papers they have published per year?",
+        "chain_of_thought_reasoning": "To compute the average number of papers per year for each author, we count the papers they have published, determine the number of distinct years they have published in, and divide the total papers by the number of years.",
+        "SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(PA.PaperId) / COUNT(DISTINCT P.Year) AS AvgPapersPerYear FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id GROUP BY A.Id;",
+        "difficulty": "moderate"
+    },
+    "example_5": {
+        "question": "Which author has published in the most unique conferences?",
+        "chain_of_thought_reasoning": "To find the author who has published in the most unique conferences, we count the distinct ConferenceId values associated with their papers and order the results in descending order.",
+        "SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(DISTINCT P.ConferenceId) AS UniqueConferences FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id WHERE P.ConferenceId IS NOT NULL GROUP BY A.Id ORDER BY UniqueConferences DESC LIMIT 1;",
+        "difficulty": "challenging"
+    },
+    "example_6": {
+        "question": "Rank authors based on the total number of papers they have published, considering ties.",
+        "chain_of_thought_reasoning": "To rank authors based on the number of papers they have published, we count the total number of papers each author has written and use the RANK() window function to generate rankings with ties.",
+        "SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(PA.PaperId) AS TotalPapers, RANK() OVER (ORDER BY COUNT(PA.PaperId) DESC) AS Rank FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId GROUP BY A.Id;",
+        "difficulty": "challenging"
+    }
+}

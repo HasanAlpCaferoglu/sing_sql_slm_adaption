@@ -1,0 +1,103 @@
+## N: number of table combinations
+## M: number of colum combinations
+dev:
+  california_schools: 
+    N: [2] 
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 3
+    ## Column Completion Task Count: 2758
+  
+  card_games:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 15
+    ## Column Completion Task Count: 14447
+  
+  codebase_community:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 28
+    ## Column Completion Task Count: 2355
+  
+  debit_card_specializing:
+    N: [2, 3]
+    M: [2, 3]
+    ## For this config:
+    ## Table Completion Task Count: 20
+    ## Column Completion Task Count: 1276
+  
+  european_football_2:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 21
+    ## Column Completion Task Count: 44921
+  
+  financial:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 28
+    ## Column Completion Task Count: 1311
+  
+  formula_1:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 79
+    ## Column Completion Task Count: 3629
+  
+  student_club:
+    N: [2]
+    M: [2, 3]
+    ## For this config:
+    ## Table Completion Task Count: 28
+    ## Column Completion Task Count: 1865
+  
+  superhero:
+    N: [2]
+    M: [2, 3]
+    ## For this config:
+    ## Table Completion Task Count: 45
+    ## Column Completion Task Count: 2634
+  
+  thrombosis_prediction:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: 3
+    ## Column Completion Task Count: 1970
+  
+  toxicology:
+    N: [1, 2, 3, 4]
+    M: [1, 2, 3]
+    ## For this config:
+    ## Table Completion Task Count: 11
+    ## Column Completion Task Count: 77
+
+
+
+train:
+  address:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: ??
+    ## Column Completion Task Count: ??
+  
+  car_retails:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: ??
+    ## Column Completion Task Count: ??
+  
+  retails:
+    N: [2]
+    M: [2]
+    ## For this config:
+    ## Table Completion Task Count: ??
+    ## Column Completion Task Count: ??

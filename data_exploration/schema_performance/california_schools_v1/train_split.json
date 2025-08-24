@@ -1,0 +1,41 @@
+{
+    "file_path": "../dataset/bird-sql/dev/dev_databases/california_schools/prep_schemaless/sub_schemas/column_level/sub_schema_examples_train_with_few_shots.jsonl",
+    "config": "bm25",
+    "overall_schema_performance": {
+        "t_num_tp": 66193,
+        "t_num_fp": 34208,
+        "t_num_fn": 1987,
+        "c_num_tp": 141875,
+        "c_num_fp": 169299,
+        "c_num_fn": 12198,
+        "table_precision": 0.659286262089023,
+        "table_recall": 0.9708565561748314,
+        "column_precision": 0.4559346217871673,
+        "column_recall": 0.9208297365534519
+    },
+    "all_few_shot_schema_performance": {
+        "t_num_tp": 66235,
+        "t_num_fp": 35721,
+        "t_num_fn": 1945,
+        "c_num_tp": 143443,
+        "c_num_fp": 705889,
+        "c_num_fn": 10630,
+        "table_precision": 0.6496429832476754,
+        "table_recall": 0.9714725726019361,
+        "column_precision": 0.16888919762825375,
+        "column_recall": 0.931006730575766
+    },
+    "topk_few_shot_schema_performance": {
+        "top_k": 6,
+        "t_num_tp": 65798,
+        "t_num_fp": 30289,
+        "t_num_fn": 2382,
+        "c_num_tp": 137752,
+        "c_num_fp": 214069,
+        "c_num_fn": 16321,
+        "table_precision": 0.6847752557578028,
+        "table_recall": 0.9650630683484893,
+        "column_precision": 0.39154001608772643,
+        "column_recall": 0.8940696942358493
+    }
+}

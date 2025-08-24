@@ -1,0 +1,377 @@
+### Examples
+
+*** Exampe 1 ***
+Database Schema: 
+CREATE TABLE Sales (
+    SalesID PK,
+    SalesPersonID,
+    CustomerID,
+    ProductID,
+    Quantity
+)
+
+text_to_sql_pair_1:
+"Question": How many sales ids are there for product id 80?
+"chain_of_thought_reasoning": 
+"SQL": "SELECT COUNT(SalesID) FROM Sales WHERE ProductID = 80"
+"difficulty": simple
+
+text_to_sql_pair_2:
+"question": "What is the total quantity of products sold by each salesperson?",
+"chain_of_thought_reasoning": "To answer this question, we need to group the sales records by SalesPersonID and sum the Quantity column to get the total quantity of products sold by each salesperson.",
+"SQL": "SELECT SalesPersonID, SUM(Quantity) AS TotalQuantity FROM Sales GROUP BY SalesPersonID;",
+"difficulty": "simple"
+
+text_to_sql_pair_3:
+"question": "Which product has been sold the most in terms of quantity?",
+"chain_of_thought_reasoning": "To determine the product that has been sold the most, we need to group sales records by ProductID, sum the Quantity column, and order the results in descending order to find the product with the highest quantity sold.",
+"SQL": "SELECT ProductID, SUM(Quantity) AS TotalSold FROM Sales GROUP BY ProductID ORDER BY TotalSold DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "What is the average quantity sold per transaction?",
+"chain_of_thought_reasoning": "To compute the average quantity sold per transaction, we need to take the average of the Quantity column across all sales records.",
+"SQL": "SELECT AVG(Quantity) AS AverageQuantityPerTransaction FROM Sales;",
+"difficulty": "moderate"
+
+text_to_sql_pair_5
+"question": "What is the rank of each salesperson based on the total quantity of products sold?",
+"chain_of_thought_reasoning": "To determine the rank of each salesperson based on total quantity sold, we first sum the quantity of sales for each SalesPersonID and then apply the RANK() window function to rank them in descending order.",
+"SQL": "SELECT SalesPersonID, SUM(Quantity) AS TotalSold, RANK() OVER (ORDER BY SUM(Quantity) DESC) AS Rank FROM Sales GROUP BY SalesPersonID;",
+"difficulty": "challenging"
+
+text_to_sql_pair_6
+"question": "For each salesperson, what is the average quantity of products sold per customer?",
+"chain_of_thought_reasoning": "To compute the average quantity of products sold per customer for each salesperson, we need to group by SalesPersonID and CustomerID, calculate the total quantity sold per customer, and then compute the average per salesperson.",
+"SQL": "SELECT SalesPersonID, AVG(TotalQuantity) AS AvgQuantityPerCustomer FROM (SELECT SalesPersonID, CustomerID, SUM(Quantity) AS TotalQuantity FROM Sales GROUP BY SalesPersonID, CustomerID) GROUP BY SalesPersonID;",
+"difficulty": "challenging"
+
+
+*** Exampe 2 ***
+Database Schema: 
+CREATE TABLE Customers (
+    CustomerID PK,
+    FirstName,
+    MiddleInitial,
+    LastName
+)
+
+CREATE TABLE Sales (
+    SalesID PK,
+    SalesPersonID,
+    CustomerID,
+    ProductID,
+    Quantity
+)
+
+text_to_sql_pair_1:
+"question": "How many sales have been made to each customer?",
+"chain_of_thought_reasoning": "To determine the number of sales made to each customer, we need to count the occurrences of each CustomerID in the Sales table and group the results by CustomerID. This will give us the total number of sales per customer.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, COUNT(S.SalesID) AS TotalSales FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID;",
+"difficulty": "simple"
+
+text_to_sql_pair_2:
+"question": "Which customers have purchased more than 5 products in total?",
+"chain_of_thought_reasoning": "To find customers who have purchased more than 5 products in total, we sum the Quantity column for each CustomerID in the Sales table. Then, we filter out customers whose total quantity is greater than 5.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, SUM(S.Quantity) AS TotalProducts FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID HAVING TotalProducts > 5;",
+"difficulty": "moderate"
+
+text_to_sql_pair_3:
+"question": "What is the full name of the customer who has made the highest number of sales transactions?",
+"chain_of_thought_reasoning": "To determine the customer with the highest number of sales transactions, we count the SalesID for each CustomerID in the Sales table. Then, we order the results in descending order and select the top customer.",
+"SQL": "SELECT C.FirstName, C.MiddleInitial, C.LastName, COUNT(S.SalesID) AS TotalSales FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID ORDER BY TotalSales DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "Which customer has purchased the highest quantity of a single product?",
+"chain_of_thought_reasoning": "To find the customer who has purchased the highest quantity of a single product, we need to group by CustomerID and ProductID in the Sales table, sum the Quantity column, and then order the results in descending order to find the maximum purchase quantity for a single product.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, S.ProductID, SUM(S.Quantity) AS TotalQuantity FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID, S.ProductID ORDER BY TotalQuantity DESC LIMIT 1;",
+"difficulty": "challenging"
+
+text_to_sql_pair_5:
+"question": "For each customer, what is the average quantity of products they have purchased?",
+"chain_of_thought_reasoning": "To compute the average quantity of products purchased per customer, we sum the Quantity column for each CustomerID and divide it by the number of sales transactions they made.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, AVG(S.Quantity) AS AvgQuantity FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID;",
+"difficulty": "moderate"
+
+text_to_sql_pair_6:
+"question": "Rank customers based on the total quantity of products they have purchased.",
+"chain_of_thought_reasoning": "To rank customers based on the total quantity of products they have purchased, we sum the Quantity column for each CustomerID and then use the RANK() window function to order them in descending order.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, SUM(S.Quantity) AS TotalQuantity, RANK() OVER (ORDER BY SUM(S.Quantity) DESC) AS Rank FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID GROUP BY C.CustomerID;",
+"difficulty": "challenging"
+
+
+*** Exampe 3 ***
+Database Schema: 
+CREATE TABLE Author (
+    Id PK,
+    Name,
+    Affiliation, 
+)
+
+CREATE TABLE Paper (
+    Id PK,
+    Title,
+    Year,
+    ConferenceId,
+    JournalId,
+    Keyword
+)
+
+CREATE TABLE PaperAuthor (
+    PaperId,
+    AuthorId,
+    Name,
+    Affiliation
+)
+
+text_to_sql_pair_1:
+"question": "How many papers has each author published?",
+"chain_of_thought_reasoning": "To determine the number of papers published by each author, we need to count the occurrences of each AuthorId in the PaperAuthor table and group by AuthorId. We then join with the Author table to retrieve the author names.",
+"SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(PA.PaperId) AS TotalPapers FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId GROUP BY A.Id;",
+"difficulty": "simple"
+
+text_to_sql_pair_2:
+"question": "Which author has published the most papers?",
+"chain_of_thought_reasoning": "To identify the author with the most publications, we count the occurrences of AuthorId in the PaperAuthor table, group by AuthorId, and order the results in descending order.",
+"SQL": "SELECT A.Id, A.Name, COUNT(PA.PaperId) AS TotalPapers FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId GROUP BY A.Id ORDER BY TotalPapers DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_3:
+"question": "Which conference or journal has the highest number of papers published?",
+"chain_of_thought_reasoning": "To determine the conference or journal with the highest number of papers, we count the Paper IDs grouped by ConferenceId and JournalId, then select the highest count.",
+"SQL": "SELECT COALESCE(ConferenceId, JournalId) AS PublicationVenue, COUNT(Id) AS TotalPapers FROM Paper GROUP BY PublicationVenue ORDER BY TotalPapers DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "For each author, what is the average number of papers they have published per year?",
+"chain_of_thought_reasoning": "To compute the average number of papers per year for each author, we count the papers they have published, determine the number of distinct years they have published in, and divide the total papers by the number of years.",
+"SQL": "SELECT A.Id, A.Name, COUNT(PA.PaperId) / COUNT(DISTINCT P.Year) AS AvgPapersPerYear FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id GROUP BY A.Id;",
+"difficulty": "challenging"
+
+text_to_sql_pair_5:
+"question": "Which author has published the most papers in conferences?",
+"chain_of_thought_reasoning": "To identify the author with the most conference papers, we count the number of Paper IDs where ConferenceId is not NULL in the Paper table, join with the PaperAuthor table to associate papers with authors, and order by count.",
+"SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(P.Id) AS ConferencePapers FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id WHERE P.ConferenceId IS NOT NULL GROUP BY A.Id ORDER BY ConferencePapers DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_6:
+"question": "Which author has collaborated with the most unique authors?",
+"chain_of_thought_reasoning": "To determine the author with the highest number of unique collaborations, we count the distinct AuthorIds appearing in the same PaperId but different from the main author.",
+"SQL": "SELECT PA1.AuthorId AS Author, A.Name, COUNT(DISTINCT PA2.AuthorId) AS UniqueCollaborators FROM PaperAuthor PA1 JOIN PaperAuthor PA2 ON PA1.PaperId = PA2.PaperId AND PA1.AuthorId != PA2.AuthorId JOIN Author A ON PA1.AuthorId = A.Id GROUP BY PA1.AuthorId ORDER BY UniqueCollaborators DESC LIMIT 1;",
+"difficulty": "challenging"
+
+text_to_sql_pair_6:
+"question": "Rank authors based on the number of papers they have published, including ties.",
+"chain_of_thought_reasoning": "To rank authors based on the number of papers they have published, we count the number of papers each author has written and use the RANK() window function to generate rankings with ties.",
+"SQL": "SELECT A.Id, A.Name, COUNT(PA.PaperId) AS TotalPapers, RANK() OVER (ORDER BY COUNT(PA.PaperId) DESC) AS Rank FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId GROUP BY A.Id;",
+"difficulty": "challenging"
+
+text_to_sql_pair_7:
+"question": "Which author has published in the most unique conferences?",
+"chain_of_thought_reasoning": "To find the author who has published in the most unique conferences, we count the distinct ConferenceId values associated with their papers and order the results in descending order.",
+"SQL": "SELECT A.Id AS AuthorID, A.Name, COUNT(DISTINCT P.ConferenceId) AS UniqueConferences FROM Author A JOIN PaperAuthor PA ON A.Id = PA.AuthorId JOIN Paper P ON PA.PaperId = P.Id WHERE P.ConferenceId IS NOT NULL GROUP BY A.Id ORDER BY UniqueConferences DESC LIMIT 1;",
+"difficulty": "challenging"
+
+
+*** Exampe 4 ***
+Database Schema:
+CREATE TABLE Person (
+    person_id PK,
+    name,
+    birthdate,
+    birth_name,
+    birth_place,
+    birth_region,
+    birth_country,
+    height_meters,
+    nickname
+)
+
+CREATE TABLE Award (
+    award_id PK,
+    organization,
+    year,
+    award_category,
+    award,
+    series,
+    episode_id, 
+    person_id,  
+    role,
+    result
+)
+
+text_to_sql_pair_1:
+"question": "How many awards has each person won?",
+"chain_of_thought_reasoning": "To determine the number of awards won by each person, we need to count the number of records in the Award table where the result is 'Won', grouping by person_id. We then join with the Person table to retrieve the names of the individuals.",
+"SQL": "SELECT P.person_id, P.name, COUNT(A.award_id) AS total_awards_won FROM Person P JOIN Award A ON P.person_id = A.person_id WHERE A.result = 'Won' GROUP BY P.person_id;",
+"difficulty": "simple"
+
+text_to_sql_pair_2:
+"question": "Which organizations have given the most awards?",
+"chain_of_thought_reasoning": "To find the organizations that have given the most awards, we count the number of awards issued by each organization in the Award table and sort them in descending order.",
+"SQL": "SELECT organization, COUNT(award_id) AS total_awards_given FROM Award GROUP BY organization ORDER BY total_awards_given DESC;",
+"difficulty": "simple"
+
+text_to_sql_pair_3:
+"question": "Which person has received the most nominations but has never won?",
+"chain_of_thought_reasoning": "To find the person with the most nominations but no wins, we count the occurrences of nominations (result = 'Nominated') for each person and ensure that they have no wins (result = 'Won').",
+"SQL": "SELECT P.person_id, P.name, COUNT(A.award_id) AS total_nominations FROM Person P JOIN Award A ON P.person_id = A.person_id WHERE A.result = 'Nominated' AND P.person_id NOT IN (SELECT person_id FROM Award WHERE result = 'Won') GROUP BY P.person_id ORDER BY total_nominations DESC LIMIT 1;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "For each person, what is their average number of awards won per year?",
+"chain_of_thought_reasoning": "To calculate the average number of awards won per year for each person, we count the total awards they have won and divide it by the number of distinct years in which they won awards.",
+"SQL": "SELECT P.person_id, P.name, COUNT(A.award_id) / COUNT(DISTINCT A.year) AS avg_awards_per_year FROM Person P JOIN Award A ON P.person_id = A.person_id WHERE A.result = 'Won' GROUP BY P.person_id;",
+"difficulty": "moderate"
+
+text_to_sql_pair_5:
+"question": "Which person has won the highest number of awards for different roles?",
+"chain_of_thought_reasoning": "To find the person with the most awards across different roles, we count the number of unique roles they have won awards for and sort the results in descending order.",
+"SQL": "SELECT P.person_id, P.name, COUNT(DISTINCT A.role) AS unique_roles_won FROM Person P JOIN Award A ON P.person_id = A.person_id WHERE A.result = 'Won' GROUP BY P.person_id ORDER BY unique_roles_won DESC LIMIT 1;",
+"difficulty": "challenging"
+
+text_to_sql_pair_6:
+"question": "Rank people based on the total number of awards won, considering ties.",
+"chain_of_thought_reasoning": "To rank people based on the number of awards won, we count the total awards won per person and use the RANK() window function to assign rankings, allowing ties.",
+"SQL": "SELECT P.person_id, P.name, COUNT(A.award_id) AS total_awards_won, RANK() OVER (ORDER BY COUNT(A.award_id) DESC) AS rank FROM Person P JOIN Award A ON P.person_id = A.person_id WHERE A.result = 'Won' GROUP BY P.person_id;",
+"difficulty": "challenging"
+
+*** Exampe 5 ***
+Database Schema:
+CREATE TABLE Customers (
+    CustomerID PK,
+    FirstName,
+    MiddleInitial,
+    LastName
+)
+
+CREATE TABLE Products (
+    ProductID PK,
+    Name,
+    Price
+)
+
+CREATE TABLE Sales (
+    SalesID PK,
+    SalesPersonID,
+    CustomerID,
+    ProductID,
+    Quantity
+)
+
+
+text_to_sql_pair_1:
+"question": "What is the total quantity of each product sold?",
+"chain_of_thought_reasoning": "To determine the total quantity sold for each product, we need to join the Sales table with the Products table on ProductID and sum the Quantity column while grouping by ProductID and product name.",
+"SQL": "SELECT P.ProductID, P.Name, SUM(S.Quantity) AS TotalQuantity FROM Products P JOIN Sales S ON P.ProductID = S.ProductID GROUP BY P.ProductID, P.Name;",
+"difficulty": "simple"
+
+text_to_sql_pair_2:
+"question": "What is the total revenue generated from all sales?",
+"chain_of_thought_reasoning": "To compute the total revenue, we need to join the Sales table with the Products table to get the price of each product. Then, we multiply the Quantity column with the Price column and sum the results.",
+"SQL": "SELECT SUM(S.Quantity * P.Price) AS TotalRevenue FROM Sales S JOIN Products P ON S.ProductID = P.ProductID;",
+"difficulty": "simple"
+
+text_to_sql_pair_3:
+"question": "For each salesperson, what is the total revenue they generated?",
+"chain_of_thought_reasoning": "To find the total revenue generated by each salesperson, we join the Sales table with the Products table on ProductID to retrieve product prices. We then compute the total revenue per salesperson by multiplying Quantity with Price and summing it up, grouping the results by SalesPersonID.",
+"SQL": "SELECT S.SalesPersonID, SUM(S.Quantity * P.Price) AS TotalRevenue FROM Sales S JOIN Products P ON S.ProductID = P.ProductID GROUP BY S.SalesPersonID;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "What is the average purchase amount per customer?",
+"chain_of_thought_reasoning": "To determine the average purchase amount per customer, we join the Sales table with the Products table on ProductID to obtain product prices. We then sum the Quantity * Price for each customer and compute the average across all customers.",
+"SQL": "SELECT AVG(TotalSpent) AS AvgPurchaseAmount FROM (SELECT C.CustomerID, SUM(S.Quantity * P.Price) AS TotalSpent FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Products P ON S.ProductID = P.ProductID GROUP BY C.CustomerID);",
+"difficulty": "moderate"
+
+text_to_sql_pair_5:
+"question": "Rank customers based on their total spending, with the highest spender ranked first.",
+"chain_of_thought_reasoning": "To rank customers based on their spending, we first join the Sales table with the Products table on ProductID to retrieve product prices. Then, we calculate the total spending per customer by summing Quantity * Price. Finally, we apply the RANK() window function to order customers based on their total spending in descending order.",
+"SQL": "SELECT C.CustomerID, C.FirstName, C.LastName, SUM(S.Quantity * P.Price) AS TotalSpent, RANK() OVER (ORDER BY SUM(S.Quantity * P.Price) DESC) AS SpendingRank FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Products P ON S.ProductID = P.ProductID GROUP BY C.CustomerID;",
+"difficulty": "challenging"
+
+text_to_sql_pair_6:
+"question": "Find the customer who purchased the highest-priced product and display their full name along with the product name and price.",
+"chain_of_thought_reasoning": "To determine the customer who purchased the most expensive product, we need to join the Sales table with the Products table on ProductID. We then sort the products by price in descending order and select the top customer who purchased it.",
+"SQL": "SELECT C.FirstName, C.MiddleInitial, C.LastName, P.Name AS ProductName, P.Price FROM Customers C JOIN Sales S ON C.CustomerID = S.CustomerID JOIN Products P ON S.ProductID = P.ProductID ORDER BY P.Price DESC LIMIT 1;",
+"difficulty": "challenging"
+
+*** Exampe 6 ***
+Database Schema:
+CREATE TABLE Episode (
+    Id PK,
+    series,
+    season,
+    episode,
+    number_in_series,
+    title,
+    summary,
+    air_date,
+    episode_image,
+    rating,
+    votes,
+)
+
+CREATE TABLE Person (
+    person_id PK,
+    name,
+    birthdate,
+    birth_name,
+    birth_place,
+    birth_region,
+    birth_country,
+    height_meters,
+    nickname
+)
+
+CREATE TABLE Credit (
+    episode_id PK,  
+    person_id PK,  
+    category,
+    role,
+    credited
+)
+
+CREATE TABLE Vote (
+    episode_id PK,  
+    stars,
+    votes,
+    percent
+)
+
+text_to_sql_pair_1:
+"question": "How many votes has each episode received?",
+"chain_of_thought_reasoning": "To determine how many votes each episode received, we need to join the Episode table with the Vote table on episode_id and sum the votes for each episode.",
+"SQL": "SELECT E.Id AS EpisodeID, E.title, SUM(V.votes) AS TotalVotes FROM Episode E JOIN Vote V ON E.Id = V.episode_id GROUP BY E.Id;",
+"difficulty": "simple"
+
+text_to_sql_pair_2:
+"question": "Which person has been credited in the most episodes?",
+"chain_of_thought_reasoning": "To determine which person has been credited in the most episodes, we need to count the number of episode_id occurrences in the Credit table for each person_id and order the results in descending order.",
+"SQL": "SELECT P.person_id, P.name, COUNT(C.episode_id) AS TotalEpisodes FROM Person P JOIN Credit C ON P.person_id = C.person_id GROUP BY P.person_id ORDER BY TotalEpisodes DESC LIMIT 1;",
+"difficulty": "simple"
+
+text_to_sql_pair_3:
+"question": "What is the average rating of episodes in each series?",
+"chain_of_thought_reasoning": "To calculate the average rating of episodes in each series, we need to group the episodes by series and compute the average of the rating column.",
+"SQL": "SELECT E.series, AVG(E.rating) AS AvgRating FROM Episode E GROUP BY E.series;",
+"difficulty": "moderate"
+
+text_to_sql_pair_4:
+"question": "For each person credited in an episode, what is the average rating of the episodes they participated in?",
+"chain_of_thought_reasoning": "To find the average rating of episodes a person has been credited in, we join the Credit table with the Episode table, group by person_id, and compute the average rating.",
+"SQL": "SELECT P.person_id, P.name, AVG(E.rating) AS AvgEpisodeRating FROM Person P JOIN Credit C ON P.person_id = C.person_id JOIN Episode E ON C.episode_id = E.Id GROUP BY P.person_id;",
+"difficulty": "moderate"
+
+text_to_sql_pair_5:
+"question": "Which person has been credited in the most highly-rated episode?",
+"chain_of_thought_reasoning": "To find the person who has been credited in the highest-rated episode, we join the Credit table with the Episode table and retrieve the person(s) who were credited in the episode with the maximum rating.",
+"SQL": "SELECT P.person_id, P.name, E.title, E.rating FROM Person P JOIN Credit C ON P.person_id = C.person_id JOIN Episode E ON C.episode_id = E.Id WHERE E.rating = (SELECT MAX(rating) FROM Episode);",
+"difficulty": "challenging"
+
+text_to_sql_pair_6:
+"question": "Rank episodes based on their total number of votes, considering ties.",
+"chain_of_thought_reasoning": "To rank episodes based on total votes, we sum votes from the Vote table for each episode and use the RANK() window function to assign rankings with ties.",
+"SQL": "SELECT E.Id, E.title, SUM(V.votes) AS TotalVotes, RANK() OVER (ORDER BY SUM(V.votes) DESC) AS Rank FROM Episode E JOIN Vote V ON E.Id = V.episode_id GROUP BY E.Id;",
+"difficulty": "challenging"

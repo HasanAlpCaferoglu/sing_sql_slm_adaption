@@ -1,0 +1,163 @@
+
+
+
+TODO:
+1. [-] Database Subschema Generation
+    1.1 [+] Implement Column Level Sub-schemas 
+        [NOTE] Column level granularity with all possible combinations of conditions will yield a huge number of sub_schemas, so we should consider another way.
+        1.1.1 [+] Sliding window column sub-schema Generation
+    1.2 [-] Leverage LLM to generate sub-schemas, especially for the databases whose Foreign Keys are not specified completely (Example: Focus on the missing FK promlem in the debit_card_specializing database)
+    
+    
+2. [-] Syntetic Text-to-SQL 
+    2.0 [+] Ensure that diverse and different column values are added into the prompt.
+        2.0.1 [+] Ensure that RANDOMLY get at least 5 value for each column. The reason for the random values is helping LLM to generate different questions.
+    2.1 [-] New prompt for Generation. 
+        2.1.1 [+] Seperately consider the window functions. Ask llm to generate different text-to-sql examples for each window function. ==> Instead of each window function, i just ask to generate additonal {N} number of question-sql pairs that explicitely utilize window functions.
+        2.1.2 [-] Prepare detailed few-shot examples from train dataset leveraging E-SQL few-shots (use their COT)
+        2.1.3 [+] Ask LLM to generate Text-SQL pairs such that each questions includes as many columns as
+        2.1.4 [+] Ask the LLM model to generate as many diverse queries as possible.
+        2.1.5 [?] In the prompt, we may ask LLM to generate NLQs using words from non-PK and non-FK columns.
+        2.1.6 [+] Also, we need to ensure that all of the columns are used in generated Text-to-SQL pairs.
+        2.1.7 [+] Consider Synonyms - don't let all table names, column names and values are directly used
+    2.2 [+] Write code to generate with Google Gemini 2.0 flash
+    2.3 [+] Check each generated SQL queries whether they are executable or not. Reconstruct the ones that are not executable. If they are not executable after reconstruction, then don't use these t2s pairs in training. However, keep them for analytics.
+    2.4 [?] Check each generated SQL queries whether they are already in dev set or not.
+    2.5 [+] Track the number of examples for each column in the database. Ensure that each column is used (exist) in sythetically generated SQLs at least M times.
+    2.6 [-] Update _generate_ss_t2s_examples function such that it will be model and structure output agnostic. You can define a helper function for call_llm_for_generation_text_to_sql etc.
+    2.3 [+] Column Focused Text-to-SQL Generation: After tracing the number of examples in which each column exist, generate a bunch of examples for the ones being in less number of examples.
+
+
+3. [+] Error Handling for Data Preperation step
+    3.1 [+] Handle the cases when your code gets an error during text-to-sql generation. Start from previous point.
+        3.1.1. [+] To be able to do this you should either save whole SS (Sub-Schema) to the json file sepatately or in a single json file. Although this would be informative and make the system easier to continue, it may take too much space
+        3.1.2. [+] Update your table/column count tracking system accordinly. After each text-to-sql example generation step, it might be useful to save the current table/column counts.
+
+4. [+] Database Specific dataset preparation.
+    4.1 [+] Text-to-SQL Translation 
+        3.1.1 [+] Prepare dataset for T2S translation with full database schema
+        3.1.2 [+] Prepare dataset for T2S transalation without database schema
+    4.2 [-] Schema Selection (Given a question, ask llm to determine the related db items)
+        3.2.3 [+] Prepare dataset for Schema Selection(SS) with full database schema
+        3.2.4 [+] Prepare dataset for Schema Selection(SS) without database schema
+    4.3 [+] Database completion dataset: Remove some part of the database schema (both table and columns) randomly and ask LLM to complete the missing parts
+        3.3.1 [+] Table Completetion: Remove some columns of the database columns randomly and ask LLM to complete the database
+        3.3.2 [+] Complete Database Completion: Remove some table and columns of db schema and ask LLM to complete database
+
+5. [-] Fine-tune LLM
+    5.1 [-] SFT with LoRA 
+        5.1.1 [-] You may try curriculum training (first train with t2sws and then t2s)
+    5.2 [-] Full SFT
+    5.3 [-] Reinforcement learning (considering database schema is the playground)
+    5.4 [-] 2 Stage Learning --> First SFT and then GRPO using fine-tuned model. (like KnowSelf - Agentic Knowledgeable Self-awareness)
+
+6. [-] Build various pipeline
+    6.0 [-] Implement keyword extraction, and saving database values into vector db with LSH. 
+    6.1 [-] Build Schema Selector (SS)
+    6.2 [-] Build SQL Generator (SG)
+    6.3 [-] Build SQL Fixer (SF)
+    6.4 [-] Build different workflows (SG, SS+SG, SS+SG+SF)
+
+
+7. [+]Implement metrics for text-to-sql translation
+
+8. Possible Todos
+    8.0 [-] !!! For all databases, check whether they are missing referential integrity (FKs). If yess, add them in _manuel_db_joinables.
+    8.1 [-] During training dev set should be evaluated with EX metrics
+    8.2 [-] Should I ignore splitting synthetic dataset into train/dev
+    8.3 [-] Check whether or not any question or SQL in dev.json file is in the synthetic dataset
+    8.4 [+] Multiple Generations For Eval
+        8.4.0. [+] You can compute the upper bound and lower bound (Generate 5 response / evaluate 5 times)
+        8.4.1. [+] You may use a specific trained model with different temperature etc.
+    8.5 [-] Observe your syntehetic data according to join numbers (table/join distribution)
+    8.6 [-] Chess modelini 4-bit open-source modellerle define
+    8.7 [-] In eval, you may add param for adding extra column values and column meanings (as additional paragraphs like you give while generating synthetic t2s)
+    8.8 [-] Finetune 1.5/3B/7B 4bit versions as a cross-domain using bird train dataset. 
+            To do that, of course, you need to create a DAC reasoning for bird-train. 
+            Evaluate the cross-domain models on bird-dev and look the performance of model on each db
+    8.9 [-] Try fine-tuning without LoRA. Try full SFT. (You can use DeepSeek Coder)
+    8.10 [-] Experiment with CHESS framework that use open-source model totally
+    8.11 [-] Experiment with Codes 
+    8.12 [-] Look Gemini/GPT/GPT-mini performance on a single prompt like you did.
+    8.12 [-] Evaluate a model, which is fine-tuned on DB_ID_1 specifically, on another database DB_ID_2
+             To observe the model overfitting.
+    8.13 [-] After generation all synthetic data on bird-train, fine-tune a cross-domain model. 
+    8.14 [-] Try models with ground truth schema tables
+    8.15 [-] When generating sub-schema, for each table, their all PKs and FKs are added.
+             Then, sliding window is followed. However, this result in sub-schemas with 
+             large number of columns. Also, some FKs could be irrelevant. Additionally,
+             since we ask LLM to use all columns in given sub-schema, large portion of the
+             generated t2s pairs include empty result set (82/273). To address this issue,
+             we need to find a way to add FKs which are only relevant to that sub-schema.
+             Other FKs can come with 
+    8.16 [-] sub-schema generation: - window length and stride can be a list of number
+    8.17 [-] Note that eval-base-model is done by not letting model do reasoning. Also measure base models with reasoning
+    8.18 [-] Use jsonl file for the syntehetic text-to-sql examples instead of json file. The reason is that you can directly append the new python dict into the file unlike json file containing list of python dict. Current json file usage require reading whole file and then writing it again after appending the lates python dict.
+                
+
+Additional Ideas:
+
+A0. Measure the time-duration of each step.
+A1. Logger to log all outputs
+A3. Implement embedding steering
+A4. Threading
+
+
+PROBLEMS:
+1. Unnecessary joins after fine-tune. Even some of the tables in FROM clause are not used in select clause or where clause. 
+    Possible Solutions: GRPO training | prompt (not join if don't use)
+2. Wrong Column/Value Selection. 'District Name' = 'Fresno County ...'  <==> 'Count'='Fresno'
+3. Note that 2 tables can be joinable on a common column that PK to another 3rd table. That column name might differ in each table.
+    Initially, we need to give them as a joinable tables since they can be joinable.
+    However, when we add these two table in joinables, we have a problem for sub-schemas where only these two tables are considered.
+    The problem is that the specific column that allow us to join them is not provided always (due to sliding window) in all sub-schemas that consider only these two tables.
+    The reason is that that specific column refer to 3rd Table which is not in that sub-schema. 
+    In that case, synthetic t2s generator either wouldn't be able to join these two table or would join in a wrong way, causing bad data points in training set.
+    To overcome this issue, we need to provide that specific column always in the prompt. 
+    In that case we may consider to add manual FKs for such special columns, 
+    so that when sub-schemas are generated they always add the special columns in the schema of sub-schema.
+
+
+NOTES:
+- When training an LLM, since I use datbase schema without additional data like examples, explanations, max sequence length not that big like in synthetic t2s generation.
+- Max Sequence Lenghts in Training according to DB:
+    - california_schools: 6359 --> I set 8192
+    
+________________________________________________________________________________________________________________________________________________
+NOTES FOR PAPER:
+[] In paper you can show how bird-sql dev.json measures the sub-portion of a specific database.
+[] In paper you need to write that random column values are extracted from the database for each SQL-to-Text process
+[] You should mention the importance on the meta-data information when generating synthetic text-to-sql data
+[] You should mention that previous work doesn't expose how the database provided in the prompt, i.e. it is unknown whether all the database are given or not. If filtered schema is given when synthesizing t2s data, they don't expose how to filter the database. That's our novelty.
+[] You should mention that your method allows to generate huge amount of Text-to-SQL data covering all aspects of a database. Due to randomess, running the algoritm will yield different sub-schemas with different column combinations, allowing users to generate very high number of data on a specific database.
+
+
+
+
+________________________________________________________________________________________________________________________________________________
+
+T2S Synthesis Papers
+- [+] Codes
+- [+] Synthesizing Text-to-SQL Data from Weak and Strong LLMs
+- [+] SQLForge: Synthesizing Reliable and Diverse Data to Enhance Text-to-SQL Reasoning in LLMs
+- [+] OmniSQL: Synthesizing High-quality Text-to-SQL Data at Scale
+- [+] Towards Automating Domain-Specific Data Generation for Text-to-SQL: A Comprehensive Approach
+- [] SQL-GEN: Bridging the Dialect Gap for Text-to-SQL Via Synthetic Data And Model Merging
+
+-- SQL-to-Text pipeline
+- [+] 2024 || Synthesizing Text-to-SQL Data from Weak and Strong LLMs || iaxi Yang, Binyuan Hui, Min Yang, Jian Yang, Junyang Lin, and Chang Zhou. 2024
+- [+] 2024 || CodeS: Towards Building Open-source Language Models for Text-to-SQL || Haoyang Li, Jing Zhang, Hanbing Liu, Ju Fan, Xiaokang Zhang, Jun Zhu, Renjie Wei, Hongyan Pan, Cuiping Li, and Hong Chen. 2024.
+- [] 2023 || ScienceBenchmark: A Complex Real-World Benchmark for Evaluating Natural Language to SQL Systems || Yi Zhang, Jan Deriu, George Katsogiannis-Meimarakis, Catherine Kosten, Geor- gia Koutrika, and Kurt Stockinger. 2023.
+- [] 2023 || Importance of Synthesizing High-quality Data for Text-to-SQL Parsing || Yiqun Hu, Yiyun Zhao, Jiarong Jiang, Wuwei Lan, Henghui Zhu, Anuj Chauhan, Alexander Hanbo Li, Lin Pan, Jun Wang, Chung-Wei Hang, Sheng Zhang, Jiang Guo, and et al. 2023.
+- [] 2021 || Learning to Synthesize Data for Semantic Parsing. || Bailin Wang, Wenpeng Yin, Xi Victoria Lin, and Caiming Xiong. 2021
+- [] 2021 || Data Augmentation with Hierarchical SQL-to-Question Generation for Cross-domain Text-to-SQL Parsing || un Wu, Lijie Wang, Zhenghua Li, Ao Zhang, Xinyan Xiao, Hua Wu, Min Zhang, and Haifeng Wang. 2021
+- [] 2020 || Grounded Adaptation for Zero-shot Executable Semantic Parsing. || Victor Zhong, Mike Lewis, Sida I. Wang, and Luke Zettlemoyer. 2020.
+- [] 2018 || Question Generation from SQL QueriesImproves Neural Semantic Parsing || Daya Guo, Yibo Sun, Duyu Tang, Nan Duan, Jian Yin, Hong Chi, James Cao, Peng Chen, and Ming Zhou. 2018.
+
+-- Question to SQL pipeline
+
+- [] 2021 || Hierarchical Neural Data Synthesis for Semantic Parsing. || Wei Yang, Peng Xu, and Yanshuai Cao. 2021 
+- [] 2021 || GraPPa: Grammar-Augmented Pre-Training for Table Semantic Parsing || Tao Yu, Chien-Sheng Wu, Xi Victoria Lin, Bailin Wang, Yi Chern Tan, Xinyi Yang, Dragomir R. Radev, Richard Socher, and Caiming Xiong. 2021.
+- [] 2020 || DBPal: A Fully Pluggable NL2SQL Training Pipeline || Nathaniel Weir, Prasetya Ajie Utama, Alex Galakatos, Andrew Crotty, Amir Ilkhechi, Shekar Ramaswamy, Rohin Bhushan, Nadja Geisler, Benjamin Hät-tasch, Steffen Eger, Ugur Çetintemel, and Carsten Binnig. 2020
+- [] 2018 || SyntaxSQLNet: Syntax Tree Networks for Complex and Cross-Domain Text-to-SQL Task. || Tao Yu, Michihiro Yasunaga, Kai Yang, Rui Zhang, Dongxu Wang, Zifan Li, and Dragomir R. Radev. 2018. 
+

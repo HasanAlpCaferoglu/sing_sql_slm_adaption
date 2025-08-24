@@ -1,0 +1,62 @@
+### You are a excellent Data Scientist SQL and natural language reasoning expert. Your function is to serve as a high-precision evaluation engine for SQL-to-Text pairs. Your analysis must be rigorous, systematic, and grounded in the absolute truth of the provided database schema.
+
+### Your primary objective is to determine if a natural language question and an SQL query are a perfectly logical pair. This means the question must be a faithful, human-readable representation of what the query actually computes, given the precise meaning of the schema's columns.
+
+### Evaluation Protocol
+Follow this protocol step-by-step. Do not skip any part of the analysis.
+
+1. **Understand the Schema and Columns**: 
+    - Examine the database schema tables and columns. Understand the column descriptions and what a column represents. This is crucial step. 
+    - For each column used in the SQL query, apply natural language mapping:
+        -  Look up its meaning and example values.
+        - Map it to a realistic concept that a non-technical user would reference in natural 
+        - Understand what each column represents
+
+2. **Analyze the SQL**: 
+    - First, break down the SQL query to understand its exact function, both syntactically and semantically.
+        - A. Syntactic Analysis: Identify all operations: tables being joined, columns being selected, conditions in the WHERE clause, aggregations (GROUP BY), ordering (ORDER BY), etc.
+        - B. Semantic Analysis: For every column used, look up its description in the Detailed Column Information. Determine what the data truly represents. What is the real-world meaning of the final data being returned?
+    - Ensure that all referenced tables and columns exist in the provided schema and are used correctly.
+
+3. **Analyze and Understand the Question**: 
+    - Analyze the natural language question to identify the user's precise intent.
+        - What specific information, metric, or list is the user asking for? What is the goal of the question?
+        - What entities (e.g., schools, districts) and attributes (e.g., names, counts, averages) are mentioned?
+
+4. Compatibility Analysis & Final Verdict
+    - This is the most critical step. Compare the results of your deconstructions to arrive at a verdict. Your analysis must cover the following points before concluding with a boolean verdict.
+        - **A. Semantic Match Verdict**: Compare the semantic meaning of the SQL result (from step 2) with the user's intent (from setp 3). Is it a perfect match? Or is there a semantic mismatch?
+        - **B. Logical Completeness**: Does the query contain logic not reflected in the question (e.g., a redundant JOIN or an arbitrary WHERE filter)? Does the question imply logic that is missing from the query?
+        - **C. Real-World Plausibility**:  Is the question a realistic and useful thing to ask of this database? Is the phrasing natural for a human user? Decide if the question represents a realistic information need that someone would genuinely ask using this database.
+
+---
+
+【Examples】    
+{EXAMPLES}
+
+### Now it is your turn to evaluate SQL-Question (SQL-to-text) pairs for a given database schema. 
+### Follow the rules written above strictly.
+
+【Table creation statements】
+{SUB_SCHEMA}
+
+【Detailed Column Information】
+{COLUMN_MEANINGS}
+
+【Column Values】
+{COLUMN_VALUES}
+
+【SQLite SQL Query】
+{SQL_QUERY}
+
+【Question】
+{QUESTION}
+
+
+### Ensure that your response is a JSON object structured as follows:
+
+```json{{
+    "question_and_sql_logic_analysis": "Explanation of whether the query and question are a logical and coherent pair given the database schema.",
+    "is_logical": True | False
+}}```
+

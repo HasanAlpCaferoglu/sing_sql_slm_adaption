@@ -1,0 +1,46 @@
+### Examples
+
+Database Schema: 
+CREATE TABLE payments (
+    payment_id INTEGER PRIMARY KEY,
+    user_id INTEGER,  
+    amount REAL,
+    payment_date DATE
+    FOREIGN KEY (user_id) REFERENCES users(s_suppkey)
+);
+
+CREATE TABLE logins (
+    login_id INTEGER PRIMARY KEY,
+    u_id INTEGER, 
+    login_time DATETIME,
+    ip_address TEXT
+    FOREIGN KEY (u_id) REFERENCES users(s_suppkey)
+);
+
+**Question Evaluation Example Using Schema Above (Example 1)**
+"SQL": "SELECT l.login_time, p.amount FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+"question": "List all login times along with payment amounts made by the same user.",
+
+"question_and_sql_logic_analysis": "It creates a Cartesian product of a user's logins and their payments. It incorrectly associates every login a user has ever made with every payment they have ever made, regardless of the timing. For example, a login from 2021 would be paired with a payment from 2024, which is a meaningless correlation. A real-world analyst would not ask this as the result is highly misleading.So, the query's logic is flawed",
+"is_logical": false
+
+**Question Evaluation Example Using Schema Above (Example 2)**
+"SQL": "SELECT DISTINCT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE DATE(l.login_time) = p.payment_date;",
+"question": "Which users have made payments and logged in on the same day?",
+
+"question_and_sql_logic_analysis": "This is a logically sound and realistic question. An analyst would reasonably want to identify users who log in and make a payment on the same day, as this cohort represents highly engaged users. The SQL query correctly implements this by joining the tables on the user ID and then filtering where the date of the login matches the date of the payment. Using `DISTINCT` correctly returns a clean list of unique user IDs.",
+"is_logical": true
+
+**Question Evaluation Example Using Schema Above (Example 3)**
+"SQL": "SELECT l.login_id, l.login_time, RANK() OVER (PARTITION BY l.u_id ORDER BY l.login_time) AS login_rank FROM payments AS p INNER JOIN logins AS l ON l.u_id = p.user_id;",
+"question": "For each user who made a payment, show their login times and how each login ranks chronologically among that user’s logins.",
+
+"question_and_sql_logic_analysis": "The `INNER JOIN` between `logins` and `payments` creates a Cartesian product, meaning each login record is duplicated for every payment the user has made. Applying the `RANK()` function to this duplicated dataset is incorrect and inefficient, producing a misleading result where the same login can appear multiple times with the same rank. A logical query would first identify users who paid and then rank their logins without creating duplicate records. So, the query's logic is flawed.",
+"is_logical": false
+
+**Question Evaluation Example Using Schema Above (Example 4)**
+"SQL": "SELECT l.u_id FROM logins AS l INNER JOIN payments AS p ON l.u_id = p.user_id WHERE p.amount > 500 ORDER BY l.login_time ASC LIMIT 1;",
+"question": "Which user was the first to log in among those who made a payment exceeding 500?",
+
+"question_and_sql_logic_analysis": "This is a logical and well-defined question. An analyst might ask this to identify the very first user who exhibited high-value behavior, perhaps for a cohort analysis or to understand early customer profiles. The SQL query correctly filters for payments over 500, gets all associated logins for those users, orders these login events chronologically, and selects the user from the top record. The logic is sound and serves a clear analytical purpose.",
+"is_logical": true

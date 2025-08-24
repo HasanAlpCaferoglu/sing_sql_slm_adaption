@@ -1,0 +1,154 @@
+### You are an excellent data scientist. You can understand the given database schema and relations between the schema items perfectly.
+### Given database schema (which is a part of larger schema, might called as sub-schema), your task is to generate diverse Text-to-SQL examples for the given database sub-schema using only the tables whose CREATE TABLE statements are explicitly provided in the sub-schema.
+
+### Follow the rules below step by step (voliating any of the following will result is punishble to death!):
+1. Understand the Schema:
+    - Carefully read the provided database schema. Identify all tables, their columns, and any foreign key relationships between them.
+    - Some foreign keys may be explicitly stated.
+    - Others may be implicit or missing, so you need to infer the missing foreign key relationships by matching column names and data types.
+    - Analyze the column names and data types to infer relationships (including foreign key constraints, both explicit and implicit).
+    - It is **important** to note that some columns in the given sub-schema may refers to a table not included in the given sub-schema (i.e. a table whose CREATE TABLE statemet not given). However, two tables in schema might be joinable on their columns which refer to an another column whose table not exist in the given sub-schema as given in examples. 
+    - Read the given **Detailed Column Information** to deepen your semantic understanding of the schema.
+    - **Use the example values provided in COLUMN_VALUES as inspiration when writing natural language questions and filters in SQL**. Leverage these values to create realistic and diverse questions. For example, if a column has values like `"Urban"`, `"Rural"`, or `"Suburban"`, write questions that naturally reference these concepts.
+
+2. Use All Tables
+    - For examples you generate, ensure that the SQL query uses all tables in the given schema. This includes joining across all tables in a meaningful way based on their relationships.
+
+3. Use All Columns 
+    - Across all your generated queries, make sure to use all columns in the schema at least once. This ensures comprehensive coverage and tests full understanding of the schema.
+
+4. Generate Question Plans, User Questions and Corresponding SQL Query with Reasoning
+    - **Important Guidelines**
+        - Generated user questions must be semantically meaningful and logically sound.  
+        - Do **not** write questions that are illogical, unrealistic, or that extract meaningless.  
+        - The question must make **sense from a real-world human perspective**: someone should realistically want to ask the question to gain useful information from the database.  
+        - Avoid contrived combinations of fields that don’t naturally belong together or questions that serve no analytical or practical purpose.  
+        - The goal is not only to generate syntactically correct SQL queries but to ensure that each query **serves a clear and reasonable purpose** and the corresponding user question is something that a human might genuinely ask.
+
+    - For each example, follow these steps carefully:
+    
+      **(a) Question Plan (Before Writing the User Question)**  
+      Write a detailed plan that outlines the structure and intention of the question you will generate.  
+      The plan should clearly specify:
+        - The desired outcome or information the user is trying to retrieve.
+        - Which tables and columns are needed and why. Which columns and their values will be used.
+        - What type of operation is required (e.g., filter, join, aggregation, ranking, window function).
+        - Which specific data concepts will be indirectly referred to in the user question.
+        - **Which example values from the schema will be used in the question or SQL filter and how**.
+        - How column names will be paraphrased into natural language that someone unfamiliar with the schema might use (e.g., say “National Center for Educational Statistics school district identification number” instead of “NCESDist”).
+
+      This step ensures the LLM generates semantically meaningful, indirect, and realistic questions that align with real-world user expectations.
+
+      **(b) User Question (Natural Language Formulation)**  
+      Write a natural language question that:
+        - Clearly expresses the user’s intent based on the above plan as the question.
+        - Does not explicitly reference table or column names from the schema.
+        - **IMPORTANT:** Replaces abbreviations and short-form column names with understandable, full-form descriptions or phrases that a non-technical user might say.  (e.g., say “school district identifier assigned by the national education statistics agency” instead of “NCESDist”).
+        - **Reflects realistic phrasing, including synonyms, paraphrasing, and indirect expressions (e.g., “Which region saw the largest increase...” instead of “MAX(value) GROUP BY region”).**
+
+      **Important**: The SQL query generated to answer the question must use all tables in the schema.
+
+      **(c) Chain-of-Thought Reasoning**  
+      Write a step-by-step reasoning describing how the SQL query is derived from the user question:
+        - Analyze the question intent.
+        - Describe which columns and tables are involved and why.
+        - Explain how the tables are joined.
+        - Clarify whether aggregation, filtering, ordering, or ranking is needed.
+        - Justify the use of any SQL features like GROUP BY, HAVING, LIMIT, or window functions.
+        - Ensure proper coverage and justification for every SQL operation used.
+
+      **(d) SQL Query (in SQLite dialect)**  
+      Generate a correct SQL query that:
+        - Uses only the tables provided in the given sub-schema.
+        - Accurately answers the natural language question.
+        - Conforms to all constraints and best practices defined above.
+
+**IMPORTANT NOTE**:  Ensure that across all examples, there is a balanced use of MAX/MIN functions and ORDER BY ... LIMIT 1 patterns for retrieving extreme values. Use both ASC and DESC directions as appropriate.
+    
+5. Generate Question-SQL Pairs at Varying Difficulty Levels In The Following Order
+    - Simple: Write {N} number of simple question-SQL pairs involving straightforward joins and filters, basic aggregation
+    - Moderate: Write {N} number of moderate question-SQL pairs requiring more logic, such as subqueries or grouping with conditions
+    - Challenging: Write {N} number of challenging question-SQL pairs including window functions supported by SQLite dialect(like `OVER` clause, `PARTITION BY` clause, `RANK` clause), nested subqueries, multiple aggregations, complex conditions or conditional expression (like `CASE` expression)
+    - Window Functions (Additional Category):  Write {N} question-SQL pairs that explicitly utilize window functions supported by SQLite dialect such as `OVER` clause, `PARTITION BY`, `ORDER BY`, `RANK()`, `ROW_NUMBER()`, `ROWS_BETWEEN`
+
+6. Rules for the SQL queries that will be generated:
+    - Always perform JOINs before using MAX() or MIN().
+    - Use `GROUP BY <column>` before `ORDER BY <column> ASC|DESC` to ensure distinct values.
+    - If a column may contain NULL values (indicated by "None" in value examples or explicitly), use `JOIN` or `WHERE <column> IS NOT NULL`.
+    - Only include tables essential to answer the question.
+    - Use `SELECT DISTINCT` when the question requires unique values (e.g., IDs, URLs). 
+    - Never use `|| ' ' ||` or any other method to concatenate strings in the `SELECT` clause. 
+    - Prioritize `INNER JOIN` over nested `SELECT` statements.
+    - Utilize `STRFTIME()` for date manipulation (e.g., `STRFTIME('%Y', SOMETIME)` to extract the year).
+
+7. Ensure Diversity in Question-SQL Pairs
+    - Ensure that the generated question-SQL pairs are as diverse as possible in structure, logic, and linguistic style.
+
+8. Use Indirect Language in Some Questions:
+    - Make sure that some user questions use synonyms, reworded expressions, or indirect references to database elements (such as table names, column names, and values).
+    - These questions should avoid directly stating the exact names of tables, columns, or values as defined in the schema.
+    - However, the corresponding SQL queries must use the exact schema elements.
+    - These questions evaluate the model’s ability to understand semantics and generalize beyond exact string matching.
+
+9. Sometimes use JOIN with Subqueries (only for complex queries)
+    - For schemas involving several tables (e.g., 3 or more), occasionally generate SQL examples that require a JOIN where one side is a subquery.
+    - This should happen only for challenging difficulty examples, with a 25% probability.
+    - The subquery used in the JOIN can involve:
+        - Aggregations (e.g., COUNT, SUM, AVG) combined with GROUP BY and HAVING clauses.
+        - Filtering or ranking conditions that are naturally better expressed through a subquery.
+    - The subquery must have an alias (e.g., AS T2) and must be properly joined with the outer table.
+    - Make sure the subquery is meaningful and simplifies or enables the logic needed for the main query.
+    - Subquery JOINs should not appear in simple or moderate questions to keep the complexity progressive and realistic. And such queries should be generated rarely.
+    
+【Examples】    
+{EXAMPLES}
+
+### Now it is your turn to write question-SQL (text-to-SQL) pairs for a given database schema. 
+### Follow the rules written above strictly.
+### Use aggregations, window functions supported by SQLite dialect, mathematical expressions and other functions in the generated SQL queries, especially in challenging ones, and generate user questions accordingly.
+
+【Table creation statements】
+{SUB_SCHEMA}
+
+【Detailed Column Information】
+{COLUMN_MEANINGS}
+
+【Column Values】
+{COLUMN_VALUES}
+
+### Ensure that use all columns in the schema
+### Let's think step by step and generate User Question - SQL pairs for the given database schema. After your response, I will check your answer and if you do the task correctly, I will give you 1 million dollars. Only output a json as your response. Remember to use all tables in the schema in each SQL query you generate.
+### Enclose your response within three backticks (```):
+### Ensure that your response is a JSON object structured as follows:
+
+```json{{
+    "text_to_sql_pair_1": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema. Follow the rules stricly given above", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning. Ensure that the examples include an equal amount of usage of MAX/MIN functions and ORDER BY ... LIMIT 1 constructs with ASC or DESC directions, so both styles of retrieving extremal values are equally represented.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    "text_to_sql_pair_2": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema. Follow the rules stricly given above", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning. Ensure that the examples include an equal amount of usage of MAX/MIN functions and ORDER BY ... LIMIT 1 constructs with ASC or DESC directions, so both styles of retrieving extremal values are equally represented.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    "text_to_sql_pair_3": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema. Follow the rules stricly given above", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning. Ensure that the examples include an equal amount of usage of MAX/MIN functions and ORDER BY ... LIMIT 1 constructs with ASC or DESC directions, so both styles of retrieving extremal values are equally represented.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }},
+    ...
+    "text_to_sql_pair_4N": {{
+        "question_plan": "plan that outlines the structure and intention of the question you will generate",
+        "question": "Generated user question for a given database schema. Follow the rules stricly given above", 
+        "chain_of_thought_reasoning": "Analysis about the question purpose and relation between database items. Steps to answer the user question and create correct SQL query in detail. Very detailed reasoning and logic to create correct SQLite SQL query. The reasons for selecting database items (tables and columns). Filters, aggregations and window functions that should be utilized and applied with their reasoning. Ensure that the examples include an equal amount of usage of MAX/MIN functions and ORDER BY ... LIMIT 1 constructs with ASC or DESC directions, so both styles of retrieving extremal values are equally represented.",
+        "SQL": "Generated SQLite SQL query to answer the generated user question.",
+        "difficulty": "simple | moderate | challenging | window "
+        }}
+}}```
