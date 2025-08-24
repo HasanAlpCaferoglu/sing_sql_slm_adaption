@@ -28,7 +28,7 @@ preprocess:
     db_completion_configs: "./run/configs/db_completion_configs.yaml"
 
 train:
-  prompt_temp_name: 'slm_t2s' # ['slm_t2s', 't2s']
+  prompt_temp_name: 't2s' # ['slm_t2s', 't2s']
   dataset_tasks: ['t2s'] # ['t2s', 'sl', 'dc', 'slws', 't2sws']
   schema_content: 'filtered_schema' # this can be one of ['filtered_schema', 'ground_truth_schema', 'whole_schema']
   use_col_value_and_descriptions: True
@@ -88,16 +88,16 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  prompt_temp_name: 'slm_t2s'  # ['slm_t2s', 't2s']
+  prompt_temp_name: 't2s'  # ['slm_t2s', 't2s']
   eval_base_model: False
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
   use_col_value_and_descriptions: True
   use_schema: True # if eval_base_model=True, then this is automatically made True
   schema_content: 'filtered_schema' # this can be one of ['filtered_schema', 'ground_truth_schema', 'whole_schema']
-  use_few_shot: False
-  few_shot_cnt: 0
-  use_reasoning_in_few_shots: False
+  use_few_shot: True
+  few_shot_cnt: 6
+  use_reasoning_in_few_shots: True
   use_reasoning: True  
   output_format: "xml" # ['xml', 'text', 'json']
   max_new_tokens: 4096
