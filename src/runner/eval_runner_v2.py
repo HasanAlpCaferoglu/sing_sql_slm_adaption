@@ -363,33 +363,90 @@ class EvalRunner:
         )
 
         return vdb_service
-    
-    def _prepare_prompt(self, t2s_dict: Dict[str, Any], prompt_template: str) -> str:
+
+    def translate_text_to_sql(self, t2s_dict: Dict[str, Any], model=None, tokenizer=None, model_name: str = None, ex_id: int = 0) -> Dict[str, Any]:
         """
-        Prepares the full prompt string for a given text-to-SQL item.
-        This includes formatting the schema, few-shot examples, and the question.
-        This function is called only ONCE per question to avoid redundant work.
-        """
+        Generating SQL query for a user question
+
+        Arguments:
+            t2s_dict (Dict[str, Any]): A dataset item 
+        
+        Returns:
+            Dict[str, Any]: A new dictionary containing necessary keys as follows: ex_id, predicted_sql, reasoning, exec_res, exec_err, f1_score, output_text, occured_error
+        """        
+        q_id = t2s_dict['question_id']
+        gt_sql = t2s_dict['SQL']
         db_id = t2s_dict['db_id']
         question = t2s_dict['question']
         evidence = t2s_dict.get('evidence', '')
-        question = f"{question} Hint: {evidence}" if evidence else question
+        question = question + " Hint: " + evidence if evidence else question
 
-        eval_configs = self.args.config['evaluation']
+        occured_error = ""
+        output_text = ""
+        predicted_sql = ""
+
+        ## Training configurations
+        train_configs = self.args.config['train']
+        max_seq_length = int(train_configs['training_params']['max_seq_length'])
+
+        ## Evaluation configurations
+        eval_configs = self.args.config['evaluation']       
+
+        eval_base_model = bool(eval_configs['eval_base_model'])
+        use_reasoning = bool(eval_configs['use_reasoning'])
+        output_format = eval_configs['output_format']
+        use_cvd = bool(eval_configs['use_col_value_and_descriptions'])
+        prompt_temp_name = str(eval_configs["prompt_temp_name"])
+        use_schema = bool(eval_configs['use_schema'])
+        schema_content = str(eval_configs['schema_content'])
         use_few_shot = bool(eval_configs['use_few_shot'])
         few_shot_cnt = int(eval_configs['few_shot_cnt']) if use_few_shot else 0
         use_reasoning_in_few_shots = bool(eval_configs['use_reasoning_in_few_shots'])
-        use_schema = bool(eval_configs['use_schema'])
-        use_cvd = bool(eval_configs['use_col_value_and_descriptions'])
-        schema_content = str(eval_configs['schema_content'])
-        prompt_temp_name = str(eval_configs["prompt_temp_name"])
+        max_new_tokens = eval_configs['max_new_tokens']
+        # Determine the temperature and top_p parameters for the current run
+        temperature = eval_configs['temperature'][ex_id]
+        top_p = eval_configs['top_p'][ex_id]
+        # self.eval_logger.info(f"temperature: {temperature} - top_p: {top_p}")
+        self.eval_logger.info(f"===============Question:{q_id} (in ex_{ex_id}) (temp:{temperature} - top_p:{top_p})===============")
+        self.eval_logger.info(f"Question and Hint: {question}")
+
+        if eval_base_model:
+            # Since base model doesn't trained for learning database schema, it should be given in prompt
+            use_schema = True
+            eval_configs['use_schema'] = True
+        else:
+            if "reason" in model_name:
+                # if model name includes sftreason, then it is specifically designed to make reasoning 
+                use_reasoning = True
+                eval_configs['use_reasoning'] = True
+            else:
+                use_reasoning = False
+                eval_configs['use_reasoning'] = False
+
+        if 'cvd' in model_name:
+            use_cvd = True
+            eval_configs['use_col_value_and_descriptions'] = True
+        else:
+            use_cvd = bool(eval_configs['use_col_value_and_descriptions'] )
+        # print(f"use cvd: {use_cvd}")
         
-        # --- 1. Prepare Few-Shot Examples ---
+        similar_synthetic_examples = []
+        if use_few_shot:
+            # Get similar synthetic examples using vector db
+            # similar_synthetic_examples = self.vdb_service.search_examples(question_and_hint=question, db_id=db_id, k=3)   # This slows down the process of evaluation, so i have prepared few-shots
+            for examples in t2s_dict.get('few_shot', {}).get('examples', []):
+                similar_synthetic_examples.append(examples)
+        
+        # all_few_shot_examples = t2s_dict.get('few_shot', {}).get('examples', [])
+        few_shot_examples = t2s_dict.get('few_shot', {}).get('examples', [])[:few_shot_cnt] # Get top n similar examples
+
+        # self.eval_logger.info(f"+++++++ few shot examples ++++++\n {type(few_shot_examples)} \n{few_shot_examples}") # DELETE LATER
+
         few_shot_augmentation_string = ""
         if use_few_shot:
-            few_shot_examples = t2s_dict.get('few_shot', {}).get('examples', [])[:few_shot_cnt]
             few_shot_string = ""
             for example_idx, example_dict in enumerate(few_shot_examples):
+                # self.eval_logger.info(f"{type(example_dict)}\n example_dict: {example_dict}") # DELETE OR COMMENT OUT LATER
                 synthetic_question = example_dict.get("question")
                 synthetic_sql = example_dict.get("SQL")
                 example_dac_reasoning = example_dict.get("dac_reasoning")
@@ -399,135 +456,181 @@ class EvalRunner:
                     example_string += f"<think>{example_dac_reasoning}</think>\n"
                 example_string += f"<answer>{synthetic_sql}</answer>\n"
                 few_shot_string += example_string + "\n"
-            
+                ## IDEA: Can giving search keyword for each example increase the EX, as it might add where to focus on the examples? Or we may direct LLM to focus on that part.
+
             few_shot_instructions = "- Below example question and their corresponding SQL queries are given as an example. Read them carefully and analyze the example question intentions, understand the link between database items and question. These examples can help you to reach correct response.\n"
             few_shot_augmentation_string = "**EXAMPLES**\n" + few_shot_instructions + few_shot_string + "\n"
+        
 
-        # --- 2. Prepare Schema String ---
+        used_schema_dict: Dict[str, List[str]] = {}
+        schema_str = ""
+        # construct schema string
         schema_augmentation_string = ""
+        schema_string = ""
+        column_meanings_str = ""
         if use_schema:
             db_info = DatabaseGeneralInfo(db_id=db_id, dbs_root_dir=self.args.dbs_root_dir)
-            schema_generator = None
-            
             if schema_content == "whole_schema":
-                schema_generator = db_info.original_db_schema_generator
+                schema_string = db_info.original_db_schema_generator.generate_schema_string(
+                    include_column_value_examples=use_cvd,
+                    include_value_description=use_cvd
+                )
+                if use_cvd:
+                    # Construct column meanings 
+                    column_meanings_str = db_info.original_db_schema_generator.get_column_profiles_string(with_keys=False, with_references=False)
+
             elif schema_content == "ground_truth_schema":
                 gt_sql = t2s_dict['SQL']
                 gt_schema_dict: Dict[str, List[str]] = get_sql_columns_dict(db_path=db_info.db_path, sql=gt_sql)
                 schema_structure = DatabaseSchema.from_schema_dict(gt_schema_dict)
                 schema_generator = DatabaseSchemaGenerator(
-                    tentative_schema=schema_structure, db_id=db_id, db_path=db_info.db_path
+                    tentative_schema=schema_structure,
+                    db_id=db_id,
+                    db_path=db_info.db_path,
+                    add_examples=False, 
+                    add_random_examples=False  # making this True slow donw the process
                 )
+                schema_string = schema_generator.generate_schema_string(
+                    include_column_value_examples=use_cvd, 
+                    include_value_description=use_cvd
+                    )
+                if use_cvd:
+                    # Construct column meanings 
+                    column_meanings_str = schema_generator.get_column_profiles_string(with_keys=False, with_references=False)
             elif schema_content == "filtered_schema":
                 filtered_schema_dict = t2s_dict.get('filtered_schema', {}).get('schema_dict', {})
                 if not filtered_schema_dict:
                     self.eval_logger.info(f"Couldn't find filtered schema dictionary. Continuing with the full schema...")
                     filtered_schema_dict: Dict[str, List[str]] = get_db_schema(db_info.db_path)
+                
                 schema_structure = DatabaseSchema.from_schema_dict(filtered_schema_dict)
                 schema_generator = DatabaseSchemaGenerator(
-                    tentative_schema=schema_structure, db_id=db_id, db_path=db_info.db_path
+                    tentative_schema=schema_structure,
+                    db_id=db_id,
+                    db_path=db_info.db_path,
+                    add_examples=use_cvd,
+                    add_random_examples=use_cvd
                 )
-
-            if schema_generator:
                 schema_string = schema_generator.generate_schema_string(
-                    include_column_value_examples=use_cvd, include_value_description=use_cvd
+                    include_column_value_examples=use_cvd,
+                    include_value_description=use_cvd
                 )
-                column_meanings_str = schema_generator.get_column_profiles_string(with_keys=False, with_references=False) if use_cvd else ""
-                
-                schema_instruction = "- Deeply analyze the database schema and information related with the schema items. Link user question with the database items.\n"
-                schema_augmentation_string = "**DATABASE SCHEMA INFORMATION**\n" + schema_instruction + schema_string + "\n"
-                if use_cvd and column_meanings_str:
-                    schema_augmentation_string += "**COLUMN INFORMATION**\n" + column_meanings_str + "\n"
+                if use_cvd:
+                    # Construct column meanings 
+                    column_meanings_str = schema_generator.get_column_profiles_string(with_keys=False, with_references=False)
 
-        # --- 3. Assemble Final Prompt ---
-        augmentation_string = few_shot_augmentation_string + schema_augmentation_string
-        if prompt_temp_name == "slm_t2s":
-            prompt = prompt_template.format(AUGMENTATION=augmentation_string, QUESTION=question)
-        elif prompt_temp_name == "t2s":
-            prompt = prompt_template.format(DB_ID=db_id, AUGMENTATION=augmentation_string, QUESTION=question)
-        else:
-            # Fallback for other templates
-            prompt = prompt_template.format(AUGMENTATION=augmentation_string, QUESTION=question)
+            schema_instruction = "- Deeply analyze the database schema and information related with the schema items. Link user question with the database items.\n"
+            schema_augmentation_string = "**DATABASE SCHEMA INFORMATION**\n" + schema_instruction +  schema_string + "\n"
+            if use_cvd:
+                schema_augmentation_string += "**COLUMN INFORMATION**\n" + column_meanings_str + "\n"
 
-        return prompt
     
-    def _generate_and_evaluate_sql(self, prompt: str, t2s_dict: Dict[str, Any], ex_id: int) -> Dict[str, Any]:
-        """
-        Generates a single SQL query from a pre-built prompt, parses the output,
-        and evaluates its correctness.
-        """
-        q_id = t2s_dict['question_id']
-        gt_sql = t2s_dict['SQL']
-        db_id = t2s_dict['db_id']
-        
-        occured_error = ""
-        output_text = ""
-        
-        # --- 1. Set Generation Parameters ---
-        eval_configs = self.args.config['evaluation']
-        max_new_tokens = eval_configs['max_new_tokens']
-        temperature = eval_configs['temperature'][ex_id]
-        top_p = eval_configs['top_p'][ex_id]
-        
-        self.eval_logger.info(f"===============Question:{q_id} (in ex_{ex_id}) (temp:{temperature} - top_p:{top_p})===============")
 
-        # --- 2. Generate SQL ---
-        if ('gemini' in self.model_name) or ('gpt' in self.model_name):
+        # load prompt template
+        prompt_template = load_template(template_name=prompt_temp_name)
+
+        if not use_reasoning:
+            pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
+            prompt_template = pt
+
+        # Format the template
+        if prompt_temp_name == "slm_t2s":
+            augmentation_string = few_shot_augmentation_string + schema_augmentation_string
+            prompt = prompt_template.format(
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
+        elif prompt_temp_name == "t2s":
+            augmentation_string = few_shot_augmentation_string + schema_augmentation_string
+            prompt = prompt_template.format(
+                DB_ID = db_id,
+                AUGMENTATION = augmentation_string,
+                QUESTION = question,
+            )
+
+
+        # self.eval_logger.info(f"----------PROMPT: \n{prompt}") # DELETE OR COMMENT OUT LATER
+
+        output_text = ""
+        if ('gemini' in model_name) or ('gpt' in model_name):
+            # translate text-to-sql using Google models
             try:
-                llm_service = LLMService(model_name=self.model_name, logger=self.eval_logger)
-                response_object,  prompt_token_cnt, completion_token_cnt, total_token_cnt  = llm_service.call_llm(prompt=prompt, temperature=temperature, top_p=top_p)
+                llm_service = LLMService(model_name=model_name, logger=self.eval_logger)
+                response_object,  prompt_token_cnt, completion_token_cnt, total_token_cnt = llm_service.call_llm(prompt=prompt, temperature=temperature, top_p=top_p)
                 output_text = response_object.text
+                
             except Exception as e:
-                occured_error = f"Error during generation: {e}\n{traceback.format_exc()}"
-                self.eval_logger.error(occured_error)
+                output_text = ""
+                occured_error = f"Error is taken during generation: {e}\n{traceback.format_exc()}"
+                self.eval_logger.error(f"Error is taken during generation: {e}\n{traceback.format_exc()}")
+
         else:
+
             try:
-                max_seq_length = int(self.args.config['train']['training_params']['max_seq_length'])
-                model_device = next(self.model.parameters()).device
-                inputs = self.tokenizer(prompt, return_tensors='pt', truncation=True, max_length=max_seq_length).to(model_device)
+                # Tokenize and move to GPU
+                model_device = next(model.parameters()).device
+                inputs = tokenizer(prompt, return_tensors='pt', truncation=True, max_length=max_seq_length).to(model_device)
+                prompt_token_count = inputs["input_ids"].shape[1]
+                print(f"Prompt token count: {prompt_token_count}")
 
                 with torch.no_grad():
-                    outputs = self.model.generate(
+                    outputs = model.generate(
                         **inputs,
                         max_new_tokens=max_new_tokens,
                         temperature=temperature,
                         top_p=top_p,
-                        do_sample=False, 
-                        pad_token_id=self.tokenizer.eos_token_id
+                        do_sample=False,
+                        pad_token_id=tokenizer.eos_token_id
                     )
-                output_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-                self.eval_logger.info(f"----------RESPONSE Question:{q_id} (in ex_{ex_id}):\n {output_text}")
+
+                output_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+                self.eval_logger.info(f"----------RESPONSE Question:{q_id} (in ex_{ex_id}) (temp:{temperature} - top_p:{top_p}):\n {output_text}")
+                # if q_id < 2:
+                #     # self.eval_logger.info(f"----------PROMPT: \n Prompt to question_id: {q_id}:\n {prompt}")
+                #     self.eval_logger.info(f"----------RESPONSE: \n Response to question_id: {q_id}:\n {output_text}")
+
             except Exception as e:
-                occured_error = f"Error during generation: {e}\n{traceback.format_exc()}"
-                self.eval_logger.error(occured_error)
+                output_text = ""
+                occured_error = f"Error is taken during generation: {e}\n{traceback.format_exc()}"
+                self.eval_logger.error(f"Error is taken during generation: {e}\n{traceback.format_exc()}")
 
-        # --- 3. Parse and Evaluate SQL ---
         try:
+            # output_dict = parse_llm_output(output_text, model_name=model.name_or_path, output_format=output_format) # old
             response_text = extract_response_part(output_text)
-            predicted_sql = extract_sql_part(extract_xml_answer(response_text))
-            reasoning = extract_xml_reasoning(response_text)
-        except Exception as e:
-            predicted_sql, reasoning = "", ""
-            error_traceback = traceback.format_exc()
-            occured_error += f"\nError during parsing: {e}\n{error_traceback}"
-            self.eval_logger.error(f"Error during parsing for Q_ID {q_id}: {e}\n{error_traceback}")
+            output_dict = {
+                "reasoning": extract_xml_reasoning(response_text),
+                "answer": extract_sql_part(extract_xml_answer(response_text))
+            }
 
+            predicted_sql = output_dict['answer']
+            reasoning = output_dict['reasoning']
+        except Exception as e:
+            predicted_sql = ""
+            reasoning = ""
+            error_traceback = traceback.format_exc()
+            occured_error = f"Error is taken during parsing: {e}\n{error_traceback}"
+            self.eval_logger.error(f"Error is taken during parsing: {e}\n{error_traceback}")
+        
         ## Evaluating the correctness of predicted SQL query
         # Calculate Execution Accuracy for the predicted SQL
-        try:
+        try: 
             db_path = self.args.dbs_root_dir / db_id / f"{db_id}.sqlite"
             comparison_dict = compare_sqls(db_path=db_path, predicted_sql=predicted_sql, ground_truth_sql=gt_sql)
             exec_res = comparison_dict['exec_res']
             exec_err = comparison_dict['exec_err']
+            # Calculate Soft-F1 score for the predicted SQL
             soft_f1_score = calculate_f1_score_for_sql(predicted_sql, gt_sql, db_path)
             f1_score = soft_f1_score if soft_f1_score else 0
         except Exception as e:
-            self.eval_logger.error(f"Error during SQL evaluation for Q_ID {q_id}. Error: {e}")
-            exec_res, exec_err, f1_score = 0, str(e), 0
+            self.eval_logger.error(f"Error is taken while evaluating predicted SQL query. Error: {e}")
+            exec_res = 0
+            exec_err = str(e) if e else "There is an error wile calculating accuracy of predicted SQL"
+            f1_score = 0
+        
+        self.eval_logger.info(f"===============Question:{q_id} (in ex_{ex_id}) (temp:{temperature} - top_p:{top_p})=============== \n----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n ----- exec_res: {exec_res} \n ----- f1_score: {f1_score} \n -----exec_err: {exec_err}")
 
-        self.eval_logger.info(f"----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
-
-        return {
+        translation_output = {
             "ex_id": ex_id,
             "predicted_sql": predicted_sql,
             "reasoning": reasoning,
@@ -535,7 +638,9 @@ class EvalRunner:
             "exec_err": exec_err,
             "f1_score": f1_score,
             "occured_error": occured_error
+
         }
+        return translation_output
         
     
     def compute_bounds(self, t2s_dicts_with_translations: List[Dict[str, Any]]) -> Dict[str, float]:
@@ -632,83 +737,97 @@ class EvalRunner:
         
 
     def evaluate(self):
-        """
-        Evaluates the model's performance by preparing prompts efficiently and
-        running generations in parallel.
+        """"
+        Evaluates the model performance
         """
         # Write configs
+        used_config = self.args.config
         write_config_file_path = self.eval_results_dir / "config.json"
         with open(write_config_file_path, "w") as file:
-            json.dump(self.args.config, file, indent=4)
+            json.dump(used_config, file, indent=4)
 
-        t2s_dicts_path = self.eval_results_dir / 't2s_items.json'
+        t2s_dicts_path = self.eval_results_dir / f't2s_items.json'
+
         eval_start_time = time.time()
-        
+        # Eval Configs
         eval_configs = self.args.config['evaluation']
         temperature_list = eval_configs['temperature']
+        top_p_list = eval_configs['top_p']
+        assert len(temperature_list) == len(top_p_list)
+
         generation_count = len(temperature_list)
         t2s_dicts_with_translations = []
-
-        # --- OPTIMIZATION: Load prompt template ONCE before the loop ---
-        prompt_temp_name = str(eval_configs["prompt_temp_name"])
-        prompt_template = load_template(template_name=prompt_temp_name)
-        if not bool(eval_configs['use_reasoning']):
-            pt_parts = prompt_template.split('<think>')
-            if len(pt_parts) > 1:
-                prompt_template = pt_parts[0] + pt_parts[1].split('</think>')[1]
-
         for t2s_dict_idx, t2s_dict in enumerate(self.eval_dataset):
-            print(f"Processing item {t2s_dict_idx + 1}/{len(self.eval_dataset)} | DB: {t2s_dict['db_id']} | Q_ID: {t2s_dict['question_id']}")
+            print(f"+++++++++++++++++++++++++++++++++++")
+            print(f"++++++++++{t2s_dict_idx}++++++++++++")
+            print(f"+++++++++++++++++++++++++++++++++++")
+            # check if the current dataset item is one of the considered database
+            db_id = t2s_dict['db_id']
+            if db_id not in self.db_ids:
+                continue
             
-            # --- OPTIMIZATION: Step 1. Prepare the prompt string ONCE for the current question ---
-            prompt = self._prepare_prompt(t2s_dict, prompt_template)
             
             t2s_dict["translations"] = {}
-            max_workers = 1 # Using threads for single GPU model inference can add overhead. 
-                            # Sticking to sequential calls per question is often cleaner and safer.
-                            # If you have multiple GPUs, a different parallelization strategy is needed.
-            
-            # --- OPTIMIZATION: Step 2. Run multiple generations using the SAME prompt ---
+            # max_workers = min(len(generation_count), 4 * (os.cpu_count() or 4))
+            # max_workers = generation_count
+            max_workers = 1
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 futures = [
                     executor.submit(
-                        self._generate_and_evaluate_sql,
-                        prompt, # Pass the pre-built prompt
+                        self.translate_text_to_sql,
                         t2s_dict,
+                        self.model,
+                        self.tokenizer,
+                        self.model_name,
                         idx
                     )
                     for idx in range(generation_count)
                 ]
 
-                for future in as_completed(futures):
+                for future in futures:
                     try:
-                        translation_output = future.result()
+                        translation_output = future.result()  # Will block until that specific future finishes
                         t2s_dict["translations"][str(translation_output.get("ex_id"))] = translation_output
                     except Exception as e:
-                        self.eval_logger.error(f"A thread failed during SQL generation/evaluation: {e}\n{traceback.format_exc()}")
+                        self.eval_logger.error(f"Error while translating question into SQL in parallel.\n{traceback.format_exc()}")
             
-            # Save progress after each item
+            # Add t2s_dict with translations
+            
             t2s_dicts_with_translations.append({
-                "question_id": t2s_dict.get("question_id", ""), "db_id": t2s_dict.get("db_id", ""),
-                "question": t2s_dict.get("question", ""), "evidence": t2s_dict.get("evidence", ""),
-                "SQL": t2s_dict.get("SQL", ""), "difficulty": t2s_dict.get("difficulty", ""),
+                "question_id": t2s_dict.get("question_id", ""),
+                "db_id": t2s_dict.get("db_id", ""),
+                "question": t2s_dict.get("question", ""),
+                "evidence": t2s_dict.get("evidence", ""),
+                "SQL": t2s_dict.get("SQL", ""),
+                "difficulty": t2s_dict.get("difficulty", ""),
                 "translations": t2s_dict.get("translations", {}),
+
             })
             with open(t2s_dicts_path, 'w') as file:
                 json.dump(t2s_dicts_with_translations, file, indent=4)
 
-        # Final calculations
+
+
+        ## Computing bounds
         bounds = self.compute_bounds(t2s_dicts_with_translations)
+        ## Computing F1 bounds
         best_translation_ids = self.find_best_translation_ids(t2s_dicts_with_translations)
 
-        overall_eval_info = {"bounds": bounds, "best_translation_ids": best_translation_ids}
+        overall_eval_info = {
+            "bounds": bounds,
+            "best_translation_ids": best_translation_ids
+        }   
+
         overall_eval_info_path = self.eval_results_dir / "overall_eval_info.json"
         with open(overall_eval_info_path, 'w') as file:
             json.dump(overall_eval_info, file, indent=4)
 
-        eval_duration = (time.time() - eval_start_time) / 60
-        self.eval_logger.info(f"-- Overall Evaluation Duration: {eval_duration:.2f} minutes")
-        print(f"Evaluation finished in {eval_duration:.2f} minutes.")
+
+        eval_end_time = time.time()
+        eval_duration = (eval_end_time - eval_start_time) / 60
+        self.eval_logger.info(f"-- Overall Evaluation Duration: {eval_duration} minutes")
+
+
 
             
 
