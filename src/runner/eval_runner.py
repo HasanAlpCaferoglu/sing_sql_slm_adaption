@@ -522,7 +522,7 @@ class EvalRunner:
     
 
         # load prompt template
-        prompt_template = load_template(template_name='template_slm_t2s')
+        prompt_template = load_template(template_name='slm_t2s')
 
         if not use_reasoning:
             pt = prompt_template.split('<think>')[0] + prompt_template.split('</think>')[1] 
