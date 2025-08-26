@@ -61,7 +61,7 @@ train:
     eval_accumulation_steps: 8 # If left unset, the whole predictions are accumulated on the device accelerator before being moved to the CPU (faster but requires more memory).
     learning_rate: 2e-4 # For SFT use 2e-4, 1e-4, 2e-5, 5e-5 | for GRPO use 5e-6
     lr_scheduler_type: "cosine" # "linear", "cosine", etc. For both SFT and GRPO use cosine
-    warmup_ratio: 0.03          # For SFT use 0.03, for GRPO use 0.1 
+    warmup_ratio: 0.1          # For SFT use 0.03, for GRPO use 0.1 ## I have used 0.03 for the SFT until now, but SLM paper uses 0.1 for SFT as well
     weight_decay: 0.01          # For SFT use 0.01, for GRPO use 0.1
     optim: "paged_adamw_8bit"   # For SFT use paged_adamw_8bit, for GRPO use adamw_8bit
     logging_steps: 500           # Log metrics every N steps. GRPO use 1
@@ -103,8 +103,8 @@ evaluation:
   max_new_tokens: 4096
   use_grpo: False
   use_unsloth: True
-  temperature: [0.0, 0.5, 0.5, 0.8, 0.8, 1.0, 1.0, 1.8, 1.8] # old [0.0, 0.2, 0.5, 0.8, 1.0] 
-  top_p: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] # old [1.0, 0.8, 1.0, 1.0, 1.0, 1.0]
+  temperature: [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]  # [0.0, 0.5, 0.5, 0.8, 0.8, 1.0, 1.0, 1.8, 1.8] 
+  top_p: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] 
   keyword_extraction_llm_model: "gemini-2.5-flash" # Either empty or proprietary models. If you set empty, it will use the model above
   eval_no: 2
   
