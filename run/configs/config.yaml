@@ -42,7 +42,7 @@ train:
   use_reasoning: True # training for both reasoning and sql generation
   output_format: "xml" # ['xml', 'text'] # This doesn't matter if use_reasoning false
   shuffle_dataset_tasks_items: True
-  base_model_name: "cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-3B-Instruct" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
+  base_model_name: "cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-7B-Instruct" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
   load_in_4bit: False # 4bit quantization to reduce memory usage. Can be False.
   use_lora: True
   train_workers_num: 1
@@ -95,8 +95,8 @@ evaluation:
   use_col_value_and_descriptions: True
   use_schema: True # if eval_base_model=True, then this is automatically made True
   schema_content: 'filtered_schema' # this can be one of ['filtered_schema', 'ground_truth_schema', 'whole_schema']
-  use_few_shot: True
-  few_shot_cnt: 6
+  use_few_shot: False
+  few_shot_cnt: 0
   use_reasoning_in_few_shots: False
   use_reasoning: True  
   output_format: "xml" # ['xml', 'text', 'json']
