@@ -42,7 +42,7 @@ train:
   use_reasoning: True # training for both reasoning and sql generation
   output_format: "xml" # ['xml', 'text'] # This doesn't matter if use_reasoning false
   shuffle_dataset_tasks_items: True
-  base_model_name: "cycloneboy/SLM-SQL-1.5B" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
+  base_model_name: "cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-3B-Instruct" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
   load_in_4bit: False # 4bit quantization to reduce memory usage. Can be False.
   use_lora: True
   train_workers_num: 1
@@ -88,8 +88,8 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  prompt_temp_name: 'slm_t2s'  # ['slm_t2s', 't2s']
-  eval_base_model: False
+  prompt_temp_name: 'csc_t2s'  # ['csc_t2s', 'slm_t2s', 't2s']
+  eval_base_model: True
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
   use_col_value_and_descriptions: True
@@ -106,7 +106,23 @@ evaluation:
   temperature: [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]  # [0.0, 0.5, 0.5, 0.8, 0.8, 1.0, 1.0, 1.8, 1.8] 
   top_p: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0] 
   keyword_extraction_llm_model: "gemini-2.5-flash" # Either empty or proprietary models. If you set empty, it will use the model above
-  eval_no: 2
+  eval_no: 1
   
-### MODELS ###
-# cycloneboy/SLM-SQL-1.5B
+### SLM MODELS
+# cycloneboy/SLM-SQL-Base-0.5B ## qwen coder based
+# cycloneboy/SLM-SQL-0.5B ## qwen coder based
+# cycloneboy/SLM-SQL-1.5B ## qwen coder based
+# cycloneboy/SLM-SQL-Base-1.5B ## qwen coder based
+# cycloneboy/SLM-SQL-Base-1.3B ## deepseek coder based
+# cycloneboy/SLM-SQL-1.3B ## deepseek coder based
+
+### OmniSQL models
+# seeklhy/OmniSQL-7B
+# seeklhy/OmniSQL-14B
+# seeklhy/OmniSQL-32B
+
+### CSC-Models
+# cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-3B-Instruct
+# cycloneboy/CscSQL-Grpo-XiYanSQL-QwenCoder-3B-2502
+# cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-7B-Instruct
+# cycloneboy/CscSQL-Grpo-XiYanSQL-QwenCoder-7B-2502
