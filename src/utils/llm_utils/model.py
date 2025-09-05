@@ -39,6 +39,8 @@ def extract_response_part(text: str) -> str:
         answer = text.split("### Answer:")[-1]
         answer = answer.split('### Now is your turn to respond in the above format:')[-1]
         return answer
+    elif 'Let me solve this step by step.' in text:
+        answer = text.split("Let me solve this step by step.")[-1]
     else:
         return text
     
