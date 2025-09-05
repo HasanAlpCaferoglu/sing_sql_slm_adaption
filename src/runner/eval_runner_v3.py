@@ -185,7 +185,12 @@ class EvalRunner:
 
         eval_configs = self.args.config['evaluation']
         prompt_temp_name = str(eval_configs['prompt_temp_name'])
-        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
+        if prompt_temp_name == "slm_t2s":
+            ptn = "ST"
+        elif prompt_temp_name == "csc_t2s":
+            ptn = "CT"
+        else:
+            ptn = "T"
         ebm = "T" if bool(eval_configs["eval_base_model"]) else "F"
         upm = "T" if bool(eval_configs["use_proprietary_model"]) else "F"
         cvd = "T" if bool(eval_configs["use_col_value_and_descriptions"]) else "F"
@@ -215,7 +220,13 @@ class EvalRunner:
         ## Train configurations
         train_configs = self.args.config['train']
         prompt_temp_name = train_configs.get("prompt_temp_name", "")
-        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
+        prompt_temp_name = str(eval_configs['prompt_temp_name'])
+        if prompt_temp_name == "slm_t2s":
+            ptn = "ST"
+        elif prompt_temp_name == "csc_t2s":
+            ptn = "CT"
+        else:
+            ptn = "T"
         use_few_shot = bool(train_configs["use_few_shot"])
         few_shot_cnt = int(train_configs["few_shot_cnt"]) if use_few_shot else 0
         use_reasoning_in_few_shots = bool(train_configs.get("use_reasoning_in_few_shots", False)) if use_few_shot else False
@@ -441,7 +452,7 @@ class EvalRunner:
 
         # --- 3. Assemble Final Prompt ---
         augmentation_string = few_shot_augmentation_string + schema_augmentation_string
-        if prompt_temp_name == "slm_t2s":
+        if prompt_temp_name == "slm_t2s" or prompt_temp_name == "csc_t2s" :
             prompt = prompt_template.format(AUGMENTATION=augmentation_string, QUESTION=question)
         elif prompt_temp_name == "t2s":
             prompt = prompt_template.format(DB_ID=db_id, AUGMENTATION=augmentation_string, QUESTION=question)

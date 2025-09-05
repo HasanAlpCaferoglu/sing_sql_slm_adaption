@@ -185,7 +185,12 @@ class EvalRunner:
 
         eval_configs = self.args.config['evaluation']
         prompt_temp_name = str(eval_configs['prompt_temp_name'])
-        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
+        if prompt_temp_name == "slm_t2s":
+            ptn = "ST"
+        elif prompt_temp_name == "csc_t2s":
+            ptn = "CT"
+        else:
+            ptn = "T"
         ebm = "T" if bool(eval_configs["eval_base_model"]) else "F"
         upm = "T" if bool(eval_configs["use_proprietary_model"]) else "F"
         cvd = "T" if bool(eval_configs["use_col_value_and_descriptions"]) else "F"
@@ -214,8 +219,13 @@ class EvalRunner:
         print('Loading Model...') 
         ## Train configurations
         train_configs = self.args.config['train']
-        prompt_temp_name = train_configs.get("prompt_temp_name", "")
-        ptn = "ST" if prompt_temp_name == "slm_t2s" else "T"
+        prompt_temp_name = str(eval_configs['prompt_temp_name'])
+        if prompt_temp_name == "slm_t2s":
+            ptn = "ST"
+        elif prompt_temp_name == "csc_t2s":
+            ptn = "CT"
+        else:
+            ptn = "T"
         use_few_shot = bool(train_configs["use_few_shot"])
         few_shot_cnt = int(train_configs["few_shot_cnt"]) if use_few_shot else 0
         use_reasoning_in_few_shots = bool(train_configs.get("use_reasoning_in_few_shots", False)) if use_few_shot else False
@@ -396,7 +406,7 @@ class EvalRunner:
                 example_string = f"Example {example_idx+1}:\n"
                 example_string += f"Question: {synthetic_question}\n"
                 if use_reasoning_in_few_shots:
-                    example_string += f"<think>{example_dac_reasoning}</think>\n"
+                    example_string += f"<reasoning>{example_dac_reasoning}</reasoning>\n"
                 example_string += f"<answer>{synthetic_sql}</answer>\n"
                 few_shot_string += example_string + "\n"
             
@@ -441,7 +451,7 @@ class EvalRunner:
 
         # --- 3. Assemble Final Prompt ---
         augmentation_string = few_shot_augmentation_string + schema_augmentation_string
-        if prompt_temp_name == "slm_t2s":
+        if prompt_temp_name == "slm_t2s" or prompt_temp_name == "csc_t2s" :
             prompt = prompt_template.format(AUGMENTATION=augmentation_string, QUESTION=question)
         elif prompt_temp_name == "t2s":
             prompt = prompt_template.format(DB_ID=db_id, AUGMENTATION=augmentation_string, QUESTION=question)
@@ -631,11 +641,7 @@ class EvalRunner:
         return best_translation_ids
         
 
-    def evaluate(self):
-        """
-        Evaluates the model's performance by preparing prompts efficiently and
-        running generations sequentially.
-        """
+    def evaluate_with_different_sampling_settings(self):
         # Write configs
         write_config_file_path = self.eval_results_dir / "config.json"
         with open(write_config_file_path, "w") as file:
@@ -653,9 +659,9 @@ class EvalRunner:
         prompt_temp_name = str(eval_configs["prompt_temp_name"])
         prompt_template = load_template(template_name=prompt_temp_name)
         if not bool(eval_configs['use_reasoning']):
-            pt_parts = prompt_template.split('<think>')
+            pt_parts = prompt_template.split('<reasoning>')
             if len(pt_parts) > 1:
-                prompt_template = pt_parts[0] + pt_parts[1].split('</think>')[1]
+                prompt_template = pt_parts[0] + pt_parts[1].split('</reasoning>')[1]
 
         for t2s_dict_idx, t2s_dict in enumerate(self.eval_dataset):
             print(f"Processing item {t2s_dict_idx + 1}/{len(self.eval_dataset)} | DB: {t2s_dict['db_id']} | Q_ID: {t2s_dict['question_id']}")
@@ -702,11 +708,219 @@ class EvalRunner:
         self.eval_logger.info(f"-- Overall Evaluation Duration: {eval_duration:.2f} minutes")
         print(f"Evaluation finished in {eval_duration:.2f} minutes.")
 
+
+    def _parse_and_evaluate_single_sql(self, output_text: str, t2s_dict: Dict[str, Any], ex_id: int) -> Dict[str, Any]:
+        """
+        Parses a single generated text output and evaluates its correctness against the ground truth.
+        """
+        q_id = t2s_dict['question_id']
+        gt_sql = t2s_dict['SQL']
+        db_id = t2s_dict['db_id']
+        occured_error = ""
+
+        # --- 1. Parse SQL from the generated text ---
+        try:
+            response_text = extract_response_part(output_text)
+            predicted_sql = extract_sql_part(extract_xml_answer(response_text))
+            reasoning = extract_xml_reasoning(response_text)
+        except Exception as e:
+            predicted_sql, reasoning = "", ""
+            error_traceback = traceback.format_exc()
+            occured_error = f"\nError during parsing: {e}\n{error_traceback}"
+            self.eval_logger.error(f"Error during parsing for Q_ID {q_id}: {e}\n{error_traceback}")
+
+        # --- 2. Evaluate the parsed SQL ---
+        try:
+            db_path = self.args.dbs_root_dir / db_id / f"{db_id}.sqlite"
+            comparison_dict = compare_sqls(db_path=db_path, predicted_sql=predicted_sql, ground_truth_sql=gt_sql)
+            exec_res = comparison_dict['exec_res']
+            exec_err = comparison_dict['exec_err']
+            soft_f1_score = calculate_f1_score_for_sql(predicted_sql, gt_sql, db_path)
+            f1_score = soft_f1_score if soft_f1_score else 0
+        except Exception as e:
+            self.eval_logger.error(f"Error during SQL evaluation for Q_ID {q_id}. Error: {e}")
+            exec_res, exec_err, f1_score = 0, str(e), 0
+
+        self.eval_logger.info(f"----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
+
+        return {
+            "ex_id": ex_id,
+            "predicted_sql": predicted_sql,
+            "reasoning": reasoning,
+            "exec_res": exec_res,
+            "exec_err": exec_err,
+            "f1_score": f1_score,
+            "occured_error": occured_error
+        }
+    
+    def evaluate_with_single_sampling_setting(self):
+
+        # Write configs
+        write_config_file_path = self.eval_results_dir / "config.json"
+        with open(write_config_file_path, "w") as file:
+            json.dump(self.args.config, file, indent=4)
+
+        t2s_dicts_path = self.eval_results_dir / 't2s_items.json'
+        eval_start_time = time.time()
+        
+        eval_configs = self.args.config['evaluation']
+        if isinstance(eval_configs['temperature'], list):
+            temperature = eval_configs['temperature'][0]
+            generation_count = len(eval_configs['temperature'])
+        elif isinstance(eval_configs['temperature'], int):
+            temperature = eval_configs['temperature']
+            generation_count = 9
+
+        if isinstance(eval_configs['top_p'], list):
+            top_p = eval_configs['top_p'][0]
+        elif isinstance(eval_configs['top_p'], int):
+            top_p = eval_configs['top_p']
+
+        max_new_tokens = eval_configs['max_new_tokens']
+        t2s_dicts_with_translations = []
+        
+        # Load prompt template ONCE before the loop
+        prompt_temp_name = str(eval_configs["prompt_temp_name"])
+        prompt_template = load_template(template_name=prompt_temp_name)
+        if not bool(eval_configs['use_reasoning']):
+            pt_parts = prompt_template.split('<reasoning>')
+            if len(pt_parts) > 1:
+                prompt_template = pt_parts[0] + pt_parts[1].split('</reasoning>')[1]
+
+        for t2s_dict_idx, t2s_dict in enumerate(self.eval_dataset):
+            print(f"Processing item {t2s_dict_idx + 1}/{len(self.eval_dataset)} | DB: {t2s_dict['db_id']} | Q_ID: {t2s_dict['question_id']}")
             
+            # Step 1. Prepare the prompt string ONCE.
+            prompt = self._prepare_prompt(t2s_dict, prompt_template)
+            
+            t2s_dict["translations"] = {}
+
+            # --- BATCHED GENERATION: Generate all 9 sequences in a single, parallel call ---
+            generated_outputs = []
+            try:
+                max_seq_length = int(self.args.config['train']['training_params']['max_seq_length'])
+                model_device = next(self.model.parameters()).device
+                inputs = self.tokenizer(prompt, return_tensors='pt', truncation=True, max_length=max_seq_length).to(model_device)
+
+                with torch.no_grad():
+                    # The key change is here!
+                    outputs = self.model.generate(
+                        **inputs,
+                        max_new_tokens=max_new_tokens,
+                        temperature=temperature,
+                        top_p=top_p,
+                        do_sample=True, # Must be True for sampling # When do_sample is set to False, We got ":An error occurred during batched SQL generation: Greedy methods without beam search do not support `num_return_sequences` different than 1 (got 9)"
+                        num_return_sequences=generation_count, # Generate 9 sequences
+                        pad_token_id=self.tokenizer.eos_token_id
+                    )
+                # Decode all the generated sequences
+                generated_outputs = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)
+                self.eval_logger.info(f"Successfully generated {len(generated_outputs)} sequences in a single batch for Q_ID: {t2s_dict['question_id']}")
+
+            except Exception as e:
+                self.eval_logger.error(f"An error occurred during batched SQL generation: {e}\n{traceback.format_exc()}")
+
+
+            # Step 2. Parse and evaluate each generated sequence. 
+            """
+            # Before
+            for idx, output_text in enumerate(generated_outputs):
+                self.eval_logger.info(f"--- Parsing and evaluating sequence {idx+1}/{generation_count} ---")
+                translation_output = self._parse_and_evaluate_single_sql(output_text, t2s_dict, idx)
+                t2s_dict["translations"][str(idx)] = translation_output
+            """
+            max_workers = min(10, os.cpu_count() or 1) 
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all parsing/evaluation jobs to the thread pool
+                futures = {
+                    executor.submit(self._parse_and_evaluate_single_sql, output_text, t2s_dict, idx): idx
+                    for idx, output_text in enumerate(generated_outputs)
+                }
+
+                # Process results as they are completed
+                for future in as_completed(futures):
+                    try:
+                        translation_output = future.result()
+                        t2s_dict["translations"][str(translation_output.get("ex_id"))] = translation_output
+                    except Exception as e:
+                        idx = futures[future]
+                        self.eval_logger.error(f"Error processing sequence {idx} in parallel: {e}\n{traceback.format_exc()}")
+            
+
+            # Save progress after each item
+            t2s_dicts_with_translations.append({
+                "question_id": t2s_dict.get("question_id", ""), 
+                "db_id": t2s_dict.get("db_id", ""),
+                "question": t2s_dict.get("question", ""),
+                "evidence": t2s_dict.get("evidence", ""),
+                "SQL": t2s_dict.get("SQL", ""), 
+                "difficulty": t2s_dict.get("difficulty", ""),
+                "translations": t2s_dict.get("translations", {}),
+            })
+            with open(t2s_dicts_path, 'w') as file:
+                json.dump(t2s_dicts_with_translations, file, indent=4)
+
+        # Final calculations
+        bounds = self.compute_bounds(t2s_dicts_with_translations)
+        best_translation_ids = self.find_best_translation_ids(t2s_dicts_with_translations)
+
+        overall_eval_info = {"bounds": bounds, "best_translation_ids": best_translation_ids}
+        self.eval_logger.info(f"overall_eval_info: \n {json.dumps(overall_eval_info, indent=4)}")
+        overall_eval_info_path = self.eval_results_dir / "overall_eval_info.json"
+        with open(overall_eval_info_path, 'w') as file:
+            json.dump(overall_eval_info, file, indent=4)
+
+        eval_duration = (time.time() - eval_start_time) / 60
+        self.eval_logger.info(f"-- Overall Evaluation Duration: {eval_duration:.2f} minutes")
+        print(f"Evaluation finished in {eval_duration:.2f} minutes.")
+
+        return
+    
+    def _is_single_sampling_setting_used(self):
+        
+        eval_configs = self.args.config['evaluation']
+        temperatures = eval_configs['temperature']
+        top_ps = eval_configs['top_p']
+
+        if isinstance(temperatures, int) and isinstance(top_ps, int):
+            return True
+        elif isinstance(temperatures, int) and isinstance(top_ps, list):
+            raise ValueError("Type mismatch between temperatures and top-p. They must be same")
+        elif isinstance(temperatures, list) and isinstance(top_ps, int):
+            raise ValueError("Type mismatch between temperatures and top-p. They must be same")
+        
+
+        initial_temp_value = temperatures[0]
+        for temp_value in temperatures:
+            if temp_value != initial_temp_value:
+                return False
+            
+        initial_topp_value = top_ps[0]
+        for top_p_value in top_ps:
+            if top_p_value != initial_topp_value:
+                return False
+            
+        return True
+
+
+    def evaluate(self):
+        eval_configs = self.args.config['evaluation']
+        use_few_shot = bool(eval_configs['use_few_shot'])
+        few_shot_cnt = int(eval_configs['few_shot_cnt'])
+        use_reasoning_in_few_shots = bool(eval_configs['use_reasoning_in_few_shots'])
+
+        is_single_sampling_setting_used = self._is_single_sampling_setting_used()
+        self.eval_logger.info(f"is_single_sampling_setting_used: {is_single_sampling_setting_used}")
+        if is_single_sampling_setting_used:
+            self.eval_logger.info("Running evaluate_with_single_sampling_setting")
+            self.evaluate_with_single_sampling_setting()
+        else:
+            self.eval_logger.info("Running evaluate_with_different_sampling_settings")
+            self.evaluate_with_different_sampling_settings()
 
             
           
-            
+        
 
 
 
