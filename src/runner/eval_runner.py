@@ -721,7 +721,9 @@ class EvalRunner:
         # --- 1. Parse SQL from the generated text ---
         try:
             response_text = extract_response_part(output_text)
-            predicted_sql = extract_sql_part(extract_xml_answer(response_text))
+            answer_part = extract_xml_answer(response_text)
+            print(f"Answer tag content: {answer_part}") ## Delete later
+            predicted_sql = extract_sql_part(answer_part)
             reasoning = extract_xml_reasoning(response_text)
         except Exception as e:
             predicted_sql, reasoning = "", ""
