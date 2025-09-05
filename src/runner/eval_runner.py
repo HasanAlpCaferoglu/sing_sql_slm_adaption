@@ -792,6 +792,8 @@ class EvalRunner:
             
             # Step 1. Prepare the prompt string ONCE.
             prompt = self._prepare_prompt(t2s_dict, prompt_template)
+            if t2s_dict_idx < 2:
+                print(f"PROMPT: {prompt}")
             
             t2s_dict["translations"] = {}
 
