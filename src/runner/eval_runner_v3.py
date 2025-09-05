@@ -220,7 +220,6 @@ class EvalRunner:
         ## Train configurations
         train_configs = self.args.config['train']
         prompt_temp_name = train_configs.get("prompt_temp_name", "")
-        prompt_temp_name = str(eval_configs['prompt_temp_name'])
         if prompt_temp_name == "slm_t2s":
             ptn = "ST"
         elif prompt_temp_name == "csc_t2s":
