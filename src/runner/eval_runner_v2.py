@@ -546,7 +546,7 @@ class EvalRunner:
             prompt_template = pt
 
         # Format the template
-        if prompt_temp_name == "slm_t2s":
+        if prompt_temp_name == "slm_t2s" or prompt_temp_name == "csc_t2s":
             augmentation_string = few_shot_augmentation_string + schema_augmentation_string
             prompt = prompt_template.format(
                 AUGMENTATION = augmentation_string,
