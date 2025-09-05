@@ -41,8 +41,10 @@ def extract_response_part(text: str) -> str:
         return answer
     elif 'Let me solve this step by step.' in text:
         answer = text.split("Let me solve this step by step.")[-1]
+        return answer
     else:
         return text
+    
     
 def extract_json(text:str) -> Dict:
     text = text.replace("```json", "").replace("```", "").replace("json", "").replace("{{", "{").replace("}}", "}")
