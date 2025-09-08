@@ -201,8 +201,10 @@ class EvalRunner:
         urifs = "T" if bool(eval_configs["use_reasoning_in_few_shots"]) else "F"
         ur = "T" if bool(eval_configs["use_reasoning"]) else "F"
         en = int(eval_configs["eval_no"])
+        temperatures = eval_configs["temperature"]
+        can_count = len(temperatures)
     
-        eval_sub_dir_name = f"ptn{ptn}_ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
+        eval_sub_dir_name = f"ptn{ptn}_cc{can_count}_ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
 
         # eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{self.args.run_start_time}")
         eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{eval_sub_dir_name}")
