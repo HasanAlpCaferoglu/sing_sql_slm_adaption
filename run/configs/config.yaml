@@ -42,7 +42,7 @@ train:
   use_reasoning: True # training for both reasoning and sql generation
   output_format: "xml" # ['xml', 'text'] # This doesn't matter if use_reasoning false
   shuffle_dataset_tasks_items: True
-  base_model_name: "cycloneboy/SLM-SQL-1.5B" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
+  base_model_name: "cycloneboy/CscSQL-Grpo-Qwen2.5-Coder-7B-Instruct" # "unsloth/Phi-4-mini-reasoning"  # unsloth/Qwen2.5-Coder-3B-Instruct
   load_in_4bit: False # 4bit quantization to reduce memory usage. Can be False.
   use_lora: True
   train_workers_num: 1
@@ -88,7 +88,7 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
-  prompt_temp_name: 'slm_t2s'  # ['csc_t2s', 'slm_t2s', 't2s']
+  prompt_temp_name: 'csc_t2s'  # ['csc_t2s', 'slm_t2s', 't2s']
   eval_base_model: True
   use_proprietary_model: False
   proprietary_model_name: "gemini-2.5-flash"
