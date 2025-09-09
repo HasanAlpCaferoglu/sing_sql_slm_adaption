@@ -205,12 +205,12 @@ class EvalRunner:
         temp = temperatures[0]
         can_count = len(temperatures)
     
-        eval_sub_dir_name = f"ptn{ptn}_temp{temp}_cc{can_count}_ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
+        eval_sub_dir_name = f"cc{can_count}_temp{temp}_ptn{ptn}_ebm{ebm}_upm{upm}_cvd{cvd}_us{us}_sc{sc}_ufs{ufs}_fsc{fsc}_urifs{urifs}_ur{ur}_en{en}"
 
         # eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{self.args.run_start_time}")
         eval_results_dir = Path(f"./results/{db_ids_str}/{pure_model_name}/{eval_sub_dir_name}")
         eval_results_dir.mkdir(parents=True, exist_ok=True)
-
+        print(f"Eval Results Dir: {eval_results_dir}")
         return eval_results_dir
 
     
