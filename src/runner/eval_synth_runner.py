@@ -438,8 +438,9 @@ class EvalSynthRunner:
         This includes formatting the schema, few-shot examples, and the question.
         This function is called only ONCE per question to avoid redundant work.
         """
-        db_id = t2s_dict['db_id']
-        question = t2s_dict['question']
+        ss_id: str = t2s_dict.get("ss_id")
+        db_id = ss_id.split("-")[0]
+        question = t2s_dict.get('question', '')
         evidence = t2s_dict.get('evidence', '')
         question = f"{question} Hint: {evidence}" if evidence else question
 
