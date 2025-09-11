@@ -88,6 +88,7 @@ prep_few_shots:
   schema_filterer_llm_model: "gemini-2.5-flash" # "gemini-1.5-pro"
 
 evaluation:
+  eval_synth_mode: "test" # ["dev", "test"]
   prompt_temp_name: 'slm_t2s'  # ['csc_t2s', 'slm_t2s', 't2s']
   eval_base_model: True
   use_proprietary_model: False
