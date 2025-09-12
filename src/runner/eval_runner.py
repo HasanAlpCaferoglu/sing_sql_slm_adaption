@@ -755,7 +755,7 @@ class EvalRunner:
             f1_score = 0
             occured_error = str(e)
 
-        self.eval_logger.info(f"----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
+        self.eval_logger.info(f"\n\n-----ex_id{ex_id} \n PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
 
         return {
             "ex_id": ex_id,
