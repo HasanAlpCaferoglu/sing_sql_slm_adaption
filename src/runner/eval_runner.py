@@ -719,6 +719,12 @@ class EvalRunner:
         q_id = t2s_dict['question_id']
         gt_sql = t2s_dict['SQL']
         db_id = t2s_dict['db_id']
+
+        predicted_sql = ""
+        reasoning = ""
+        exec_res = 0.0
+        exec_err = ""
+        f1_score = 0.0
         occured_error = ""
 
         # --- 1. Parse SQL from the generated text ---
@@ -744,7 +750,10 @@ class EvalRunner:
             f1_score = soft_f1_score if soft_f1_score else 0
         except Exception as e:
             self.eval_logger.error(f"Error during SQL evaluation for Q_ID {q_id}. Error: {e}")
-            exec_res, exec_err, f1_score = 0, str(e), 0
+            exec_res = 0.0
+            exec_err = str(e)
+            f1_score = 0
+            occured_error = str(e)
 
         self.eval_logger.info(f"----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
 

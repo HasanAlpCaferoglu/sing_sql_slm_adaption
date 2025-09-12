@@ -790,6 +790,11 @@ class EvalSynthRunner:
         db_id = ss_id.split("-")[0]
 
         gt_sql = t2s_dict['SQL']
+        predicted_sql = ""
+        reasoning = ""
+        exec_res = 0.0
+        exec_err = ""
+        f1_score = 0.0
         occured_error = ""
 
         # --- 1. Parse SQL from the generated text ---
@@ -818,7 +823,10 @@ class EvalSynthRunner:
             error_traceback = traceback.format_exc()
             print(f"Error during SQL evaluation for QQ_KEY_ID {item_key}. Error: {e}. \n {error_traceback}")
             self.eval_logger.error(f"Error during SQL evaluation for QQ_KEY_ID {item_key}. Error: {e}. \n {error_traceback}")
-            exec_res, exec_err, f1_score = 0, str(e), 0
+            exec_res = 0.0
+            exec_err = str(e)
+            f1_score = 0
+            occured_error = str(e)
 
         self.eval_logger.info(f"----- PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
 

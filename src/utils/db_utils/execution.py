@@ -318,49 +318,53 @@ def calculate_f1_score_from_execution_results(predicted, ground_truth):
     if not predicted and not ground_truth:
         return 1.0
 
-    # Drop duplicates
-    predicted_set = set(predicted) if predicted else set()
-    ground_truth_set = set(ground_truth)
+    try:
+        # Drop duplicates
+        predicted_set = set(predicted) if predicted else set()
+        ground_truth_set = set(ground_truth)
 
-    # convert back to list
-    predicted = list(predicted_set)
-    ground_truth = list(ground_truth_set)
+        # convert back to list
+        predicted = list(predicted_set)
+        ground_truth = list(ground_truth_set)
 
-    # Calculate matching scores for each possible pair
-    match_scores = []
-    pred_only_scores = []
-    truth_only_scores = []
-    for i, gt_row in enumerate(ground_truth):
-        # rows only in the ground truth results
-        if i >= len(predicted):
+        # Calculate matching scores for each possible pair
+        match_scores = []
+        pred_only_scores = []
+        truth_only_scores = []
+        for i, gt_row in enumerate(ground_truth):
+            # rows only in the ground truth results
+            if i >= len(predicted):
+                match_scores.append(0)
+                truth_only_scores.append(1)
+                continue
+            pred_row = predicted[i]
+            match_score, pred_only_score, truth_only_score = calculate_row_match(
+                pred_row, gt_row
+            )
+            match_scores.append(match_score)
+            pred_only_scores.append(pred_only_score)
+            truth_only_scores.append(truth_only_score)
+
+        # rows only in the predicted results
+        for i in range(len(predicted) - len(ground_truth)):
             match_scores.append(0)
-            truth_only_scores.append(1)
-            continue
-        pred_row = predicted[i]
-        match_score, pred_only_score, truth_only_score = calculate_row_match(
-            pred_row, gt_row
+            pred_only_scores.append(1)
+            truth_only_scores.append(0)
+
+        tp = sum(match_scores)
+        fp = sum(pred_only_scores)
+        fn = sum(truth_only_scores)
+
+        precision = tp / (tp + fp) if tp + fp > 0 else 0
+        recall = tp / (tp + fn) if tp + fn > 0 else 0
+
+        f1_score = (
+            2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
         )
-        match_scores.append(match_score)
-        pred_only_scores.append(pred_only_score)
-        truth_only_scores.append(truth_only_score)
-
-    # rows only in the predicted results
-    for i in range(len(predicted) - len(ground_truth)):
-        match_scores.append(0)
-        pred_only_scores.append(1)
-        truth_only_scores.append(0)
-
-    tp = sum(match_scores)
-    fp = sum(pred_only_scores)
-    fn = sum(truth_only_scores)
-
-    precision = tp / (tp + fp) if tp + fp > 0 else 0
-    recall = tp / (tp + fn) if tp + fn > 0 else 0
-
-    f1_score = (
-        2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
-    )
-    return f1_score
+        return f1_score
+    except Exception as e:
+        logging.error(f"Error in computing SOFT F1 score. {e}")
+        return 0.0
 
 
 def calculate_f1_score_for_sql(predicted_sql: str, ground_truth: str, db_path: Union[str, Path], sql_dialect: str = 'SQLite'):
