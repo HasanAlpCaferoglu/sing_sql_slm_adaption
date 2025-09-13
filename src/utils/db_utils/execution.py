@@ -27,16 +27,26 @@ def connect_db(sql_dialect, db_path):
     return conn
 
 def execute_and_calculate_function_on_sqls(predicted_sql, ground_truth, db_path, sql_dialect, calculate_func):
-    conn = connect_db(sql_dialect, db_path)
-    # Connect to the database
-    cursor = conn.cursor()
-    cursor.execute(predicted_sql)
-    predicted_res = cursor.fetchall()
-    cursor.execute(ground_truth)
-    ground_truth_res = cursor.fetchall()
-    conn.close()
-    res = calculate_func(predicted_res, ground_truth_res)
-    return res
+    # conn = connect_db(sql_dialect, db_path)
+    # # Connect to the database
+    # cursor = conn.cursor()
+    # cursor.execute(predicted_sql)
+    # predicted_res = cursor.fetchall()
+    # cursor.execute(ground_truth)
+    # ground_truth_res = cursor.fetchall()
+    # conn.close()
+    # res = calculate_func(predicted_res, ground_truth_res)
+    # return res
+
+    try:
+        predicted_res = execute_sql(db_path=db_path, sql=predicted_sql)
+        ground_truth_res = execute_sql(db_path=db_path, sql=ground_truth)
+        res = calculate_func(predicted_res, ground_truth_res)
+        return res
+    except Exception as e:
+        logging.error(f"Failed to execute and calcualte given function: {e}")
+        raise # Re-raise the exact error that was caught
+        
 
 def execute_sql(db_path: str, sql: str, fetch: Union[str, int] = "all", timeout: int = 60) -> Any:
     class QueryThread(threading.Thread):

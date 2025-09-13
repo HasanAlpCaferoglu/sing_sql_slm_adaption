@@ -55,7 +55,7 @@ from utils.db_utils.execution import execute_sql, get_execution_status, compare_
 from utils.llm_utils.prompt_utils import load_template, load_template_examples
 from utils.llm_utils.model import call_llm, parse_llm_output
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 from utils.db_utils.schema_generator import DatabaseSchemaGenerator
 from utils.db_utils.db_info_utils import get_db_all_tables, get_db_schema
 from utils.db_utils.db_info import DatabaseGeneralInfo
@@ -825,7 +825,7 @@ class EvalSynthRunner:
             self.eval_logger.error(f"Error during SQL evaluation for QQ_KEY_ID {item_key}. Error: {e}. \n {error_traceback}")
             exec_res = 0.0
             exec_err = str(e)
-            f1_score = 0
+            f1_score = 0.0
             occured_error = str(e)
 
         self.eval_logger.info(f"\n\n-----ex_id{ex_id} \n PREDICTED_SQL: {predicted_sql} \n----- GT_SQL: {gt_sql} \n----- exec_res: {exec_res} | f1_score: {f1_score:.4f}")
@@ -939,13 +939,36 @@ class EvalSynthRunner:
 
                 # Process results as they are completed
                 for future in as_completed(futures):
+                    idx = futures[future]
                     try:
-                        translation_output = future.result()
+                        translation_output = future.result(timeout=120)
                         process_t2s_dict["translations"][str(translation_output.get("ex_id"))] = translation_output
+                    except TimeoutError:
+                        self.eval_logger.error(f"Worker for sequence {idx} timed out and is likely hung. Skipping this result.")
+                        # Optionally, add a placeholder result for the timed-out query
+                        process_t2s_dict["translations"][str(idx)] = {
+                            "ex_id": idx,
+                            "predicted_sql": "QUERY TIMED OUT",
+                            "reasoning": "",
+                            "exec_res": 0.0,
+                            "exec_err": "Worker thread timed out after 120 seconds.",
+                            "f1_score": 0.0,
+                            "occured_error": "Worker thread timed out."
+                        }
+
                     except Exception as e:
                         error_reason = traceback.format_exc()
                         idx = futures[future]
                         self.eval_logger.error(f"Error processing sequence {idx} in parallel: {e}\n{traceback.format_exc()} \n {error_reason}")
+                        process_t2s_dict["translations"][str(idx)] = {
+                            "ex_id": idx,
+                            "predicted_sql": "Error",
+                            "reasoning": "",
+                            "exec_res": 0.0,
+                            "exec_err": "Worker thread error.",
+                            "f1_score": 0.0,
+                            "occured_error": "Worker thread error."
+                        }
             
 
             # Add the currenlty processed data item into the processed list
